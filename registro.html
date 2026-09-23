@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Novo registro diário de operações portuárias — CODEBA Porto de Ilhéus.">
+<title>Novo registro diário — CODEBA</title>
+<link rel="stylesheet" href="css/styles.css">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="back-link" href="index.html">← Início</a>
+  <div class="brand">
+    <img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA">
+    <span>Registro Diário<small>Ficha + Inspeção</small></span>
+  </div>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+<form id="formRegistro" novalidate>
+  <div class="doc-header">
+    <img class="doc-logo" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária"><br>
+    <span class="doc-tag">Registro diário · 3 páginas</span>
+    <h1>Ficha de Operações + Inspeção</h1>
+    <p>Preencha uma etapa por vez. Nada é salvo pela metade.</p>
+  </div>
+
+  <!-- Wizard progress -->
+  <div class="wizard-progress no-print"><i id="wizBar"></i></div>
+  <nav class="wsteps no-print" id="wsteps">
+    <button type="button" class="wstep-btn" data-goto="0">
+      <span class="step-circle">1</span>
+      Dia e turno
+      <small>data · técnico · fiel · porto</small>
+    </button>
+    <button type="button" class="wstep-btn" data-goto="1">
+      <span class="step-circle">2</span>
+      Ficha
+      <small>berços · cargas</small>
+    </button>
+    <button type="button" class="wstep-btn" data-goto="2">
+      <span class="step-circle">3</span>
+      Inspeção
+      <small>24 itens</small>
+    </button>
+    <button type="button" class="wstep-btn" data-goto="3">
+      <span class="step-circle">4</span>
+      Revisão
+      <small>salvar</small>
+    </button>
+  </nav>
+  <p class="step-hint no-print" id="stepHint"></p>
+
+  <!-- ETAPA 1 -->
+  <section class="wstep" data-step="0">
+  <div class="card">
+    <div class="section-title"><span class="num">1</span> Dia e turno</div>
+    <p class="subtitle">Vale para as 3 páginas. Data e técnico são copiados para o resto do formulário.</p>
+    <div class="grid g2">
+      <label class="field">Data do serviço * <input type="date" name="data_servico" required></label>
+      <label class="field">Porto *
+        <div class="radio-row">
+          <label><input type="radio" name="porto" value="SALVADOR"> Salvador</label>
+          <label><input type="radio" name="porto" value="ARATU"> Aratu</label>
+          <label><input type="radio" name="porto" value="ILHEUS" checked> Ilhéus</label>
+        </div>
+      </label>
+      <label class="field">Técnico de operações * <input name="tecnico_operacoes" placeholder="Nome completo" required></label>
+      <label class="field">Fiel de armazém * <input name="fiel_armazem" placeholder="Nome completo" required></label>
+    </div>
+  </div>
+  </section>
+
+  <!-- ETAPA 2 -->
+  <section class="wstep" data-step="1">
+  <div class="card">
+    <div class="section-title"><span class="num">2</span> Ficha de operações</div>
+    <div class="grid g2">
+      <label class="field">Período — de * <input type="date" name="periodo_inicio" required></label>
+      <label class="field">Período — até * <input type="date" name="periodo_fim" required></label>
+    </div>
+    <div class="divider"></div>
+    <div class="sub-title">Berço 01</div>
+    <div class="grid g2">
+      <label class="field">Nome do navio * <input name="berco01_nome" placeholder="Ex.: MV Atlântico"></label>
+      <label class="field">Carga <input name="berco01_carga" placeholder="Ex.: Soja a granel"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g3">
+      <label class="field">Movimento
+        <div class="radio-row">
+          <label><input type="radio" name="berco01_movimento" value="ATRACOU"> Atracou</label>
+          <label><input type="radio" name="berco01_movimento" value="DESATRACOU"> Desatracou</label>
+        </div>
+      </label>
+      <label class="field">Hora <input type="time" name="berco01_hora"></label>
+      <label class="field">Até 07:00 de <input type="date" name="berco01_ate"></label>
+    </div>
+    <br>
+    <div class="grid g3">
+      <label class="field">Operação
+        <div class="radio-row">
+          <label><input type="radio" name="berco01_operacao" value="CARREGOU"> Carregou</label>
+          <label><input type="radio" name="berco01_operacao" value="DESCARREGOU"> Descarregou</label>
+        </div>
+      </label>
+      <label class="field">Toneladas (t) <input type="number" step="0.01" min="0" name="berco01_toneladas" placeholder="0,00"></label>
+      <span></span>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <label class="field">Agência marítima <input name="berco01_agencia"></label>
+      <label class="field">Operador portuário <input name="berco01_operador"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="sub-title">Berço 02</div>
+    <div class="grid g2">
+      <label class="field">Nome do navio <input name="berco02_nome" placeholder="Ex.: MV Pacífico"></label>
+      <label class="field">Carga <input name="berco02_carga"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g3">
+      <label class="field">Movimento
+        <div class="radio-row">
+          <label><input type="radio" name="berco02_movimento" value="ATRACOU"> Atracou</label>
+          <label><input type="radio" name="berco02_movimento" value="DESATRACOU"> Desatracou</label>
+        </div>
+      </label>
+      <label class="field">Hora <input type="time" name="berco02_hora"></label>
+      <label class="field">Até 07:00 de <input type="date" name="berco02_ate"></label>
+    </div>
+    <br>
+    <div class="grid g3">
+      <label class="field">Operação
+        <div class="radio-row">
+          <label><input type="radio" name="berco02_operacao" value="CARREGOU"> Carregou</label>
+          <label><input type="radio" name="berco02_operacao" value="DESCARREGOU"> Descarregou</label>
+        </div>
+      </label>
+      <label class="field">Toneladas (t) <input type="number" step="0.01" min="0" name="berco02_toneladas" placeholder="0,00"></label>
+      <span></span>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <label class="field">Agência marítima <input name="berco02_agencia"></label>
+      <label class="field">Operador portuário <input name="berco02_operador"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="sub-title">Cargas — 6 locais</div>
+    <div id="cargas"></div>
+    <div class="divider"></div>
+    <div class="sub-title">Observações da ficha</div>
+    <label class="field">Observações do GPI <textarea name="observacoes_gpi" rows="3"></textarea></label><br>
+    <label class="field">Observações do técnico de operações <textarea name="observacoes_tecnico" rows="3"></textarea></label><br>
+    <label class="field">Observações do fiel de armazém <textarea name="observacoes_fiel" rows="3"></textarea></label>
+  </div>
+  </section>
+
+  <!-- ETAPA 3 -->
+  <section class="wstep" data-step="2">
+  <div class="card">
+    <div class="section-title"><span class="num">3</span> Inspeção</div>
+    <div class="grid g3">
+      <label class="field">Data da inspeção * <input type="date" name="data_inspecao" required></label>
+      <label class="field">Hora * <input type="time" name="hora_operacoes" required></label>
+      <label class="field">Técnico (assinatura) * <input name="tecnico_nome" required></label>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <label class="field">Navios atracados <textarea name="navios_atracados" rows="2"></textarea></label>
+      <label class="field">Principais operações <textarea name="principais_operacoes" rows="2"></textarea></label>
+    </div>
+    <div class="btn-row no-print">
+      <button type="button" class="btn btn-ghost" id="btnPuxarNavios">
+        🚢 Puxar navios da ficha
+      </button>
+    </div>
+    <p class="subtitle"><b>Legenda:</b> L leve · M média · G grave · GR gravíssima · T TAC — <b>Ações:</b> RIP / ROP</p>
+    <div class="toolbar no-print">
+      <button type="button" class="btn btn-ghost" id="btnTodosSim">✓ Todos SIM</button>
+      <button type="button" class="btn btn-ghost" id="btnLimpar">✕ Limpar</button>
+      <div class="progress-wrap" style="flex:1">
+        <div class="progress"><i id="progBar"></i></div>
+        <span class="badge badge-blue" id="contador">0/24</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="check">
+      <thead><tr>
+        <th style="width:52px">Nº</th>
+        <th>Item</th>
+        <th style="width:120px">Norma/Grau</th>
+        <th style="width:260px">Resposta *</th>
+      </tr></thead>
+      <tbody id="itensBody"></tbody>
+    </table>
+    </div>
+    <div class="divider"></div>
+    <label class="field">Observações e ações RIP/ROP <span style="color:var(--bad)">(obrigatório se houver NÃO)</span>
+      <textarea name="observacoes_acoes" rows="5" placeholder="Ex.: Item 06 — NÃO — escada sem rede. Ação: ROP..."></textarea>
+    </label>
+    <div class="divider"></div>
+    <div class="grid g3">
+      <label class="field">Técnico — data <input type="date" name="tecnico_data"></label>
+      <label class="field">Chefe de área — nome <input name="chefe_nome"></label>
+      <label class="field">Chefe de área — data <input type="date" name="chefe_data"></label>
+      <label class="field">Gerente do porto — nome <input name="gerente_nome"></label>
+      <label class="field">Gerente do porto — data <input type="date" name="gerente_data"></label>
+      <span></span>
+    </div>
+  </div>
+  </section>
+
+  <!-- ETAPA 4 -->
+  <section class="wstep" data-step="3">
+  <div class="card">
+    <div class="section-title"><span class="num">4</span> Revisão</div>
+    <p class="subtitle">Confira as pendências. O salvamento só conclui com ficha e inspeção válidas.</p>
+    <ul id="revisao" style="list-style:none;margin:0;padding:0;display:grid;gap:10px"></ul>
+  </div>
+  </section>
+
+  <div class="sticky-actions no-print">
+    <p class="subtitle" id="saveStatus" style="margin:0 0 10px">Novo registro diário.</p>
+    <div class="wizard-nav">
+      <button type="button" class="btn btn-ghost" id="btnBack">← Voltar</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-ghost" id="btnPdf" onclick="window.print()" style="display:none">📄 PDF 3 páginas</button>
+      <button type="button" class="btn btn-primary" id="btnNext">Continuar →</button>
+      <button type="submit" class="btn btn-gold" id="btnSubmit" style="display:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+        Salvar ficha + inspeção
+      </button>
+    </div>
+  </div>
+</form>
+<div class="footer">CODEBA · Registro diário — Ficha + Inspeção</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script>
+const LOCAIS = ['ARMAZÉM 01 SUL','ARMAZÉM 01 NORTE','ARMAZÉM 02','PÁTIO CARGA GERAL','PÁTIO I / ARMAZÉM 01','PÁTIO II / ARMAZÉM 02'];
+const ITENS = [
+  [1, "Foram providenciados rádios para comunicação bilateral em trabalhos com cargas içadas nas operações dos navios na faixa do cais?", "4/M"],
+  [2, "Alguma atracação/desatracação foi acompanhada? Foi observada a comunicação bilateral entre a Praticagem e Técnico de sistema, bem como uso adequado de EPI pelos trabalhadores de atracação?", "4/M"],
+  [3, "Os guindastes de terra em operação foram verificados pelos Operadores responsáveis?", "4/M"],
+  [4, "Os operadores de máquinas e equipamentos são cadastrados e habilitados para operação?", "4/M, 1/GR, 2/GR"],
+  [5, "Os talhadores portuários estão escalados para as operações?", "2/T"],
+  [6, "As escadas de acesso ao navio estão em condições de uso (conservação, limpeza, rede protetora, antiderrapante, corrimão, dispositivo rotativo, fora do raio da lança etc.)?", "4/T"],
+  [7, "Foi observada a proibição do uso de extensões elétricas fixadas em escada?", "4/M"],
+  [8, "Os equipamentos terrestres de guindar emitem sinais sonoros e luminosos durante o seu deslocamento?", "4/M"],
+  [9, "Há possibilidade de realização simultânea de atividades? Caso positivo, foi informada a proibição e paralisadas as operações?", "4/M"],
+  [10, "As instalações sanitárias da faixa do cais estão em bom estado de uso e higienização?", "3/L"],
+  [11, "Foram observadas inadequações nos resíduos oriundos de movimentação portuária?", "2, 1/G"],
+  [12, "Foi observado risco efetivo de contaminação ambiental em alguma operação/instalação?", "1/G, 2/G"],
+  [13, "Existem reparos em costados de navios atracados? Foram avisados e liberados pela Gerência?", "1/G"],
+  [14, "Existem latas de tintas ou outras substâncias à beira do cais que possam cair no mar?", "1/G"],
+  [15, "Foi registrado algum incidente/acidente nas instalações ou operações?", "4/M, 1/G, 2/G"],
+  [16, "As operações acompanhadas se realizam com regularidade, segurança, eficiência e eficácia?", "5/L, 1/M, 3/M, 4/M, 1/G, 6/T"],
+  [17, "Os veículos (carretas) das operações acompanhadas estão em boas condições de operação?", "4/M, 3/T, 4/T"],
+  [18, "Veículos e vagões de granéis sólidos estão cobertos/enlonados no trânsito e estacionamento?", "4/M, 5/T"],
+  [19, "Foi observado o uso de quadro posicionado nas operações de contêiner?", "4/M"],
+  [20, "Acessórios de içamento (anéis, manilhas, sapatilhas, cabos de aço) estão visivelmente em bom estado?", "4/M"],
+  [21, "Em líquidos/gases inflamáveis, cumprem-se NR-16 e NR-20?", "4/M"],
+  [22, "As vias estão livres para movimentação segura de passageiros de Cruzeiros/Transatlântico?", "4/M"],
+  [23, "As placas de comunicação com a ANTAQ estão visíveis e conservadas?", "2/L"],
+  [24, "Houve paralisação por risco grave e iminente?", "1/M"]
+];
+
+const form     = document.getElementById('formRegistro');
+const params   = new URLSearchParams(location.search);
+const grupoParam = params.get('grupo');
+let editFichaId = null, editInspId = null;
+let step = 0;
+const STEP_NAMES = ['Dia e turno', 'Ficha de operações', 'Inspeção', 'Revisão'];
+
+// render cargas
+document.getElementById('cargas').innerHTML = LOCAIS.map((local, i) => `
+  <div class="local-block"><h4>${local}</h4>
+  <div class="grid g2">
+    <label class="field">Carga <input name="carga_${i}_carga"></label>
+    <label class="field">Quant. existente (t) <input type="number" step="0.01" min="0" name="carga_${i}_quant"></label>
+    <label class="field">Até às 07:00h de <input type="date" name="carga_${i}_data"></label>
+    <label class="field">Movimentação <div class="radio-row">
+      <label><input type="radio" name="carga_${i}_direcao" value="ENTROU"> Entrou</label>
+      <label><input type="radio" name="carga_${i}_direcao" value="SAIU"> Saiu</label></div></label>
+    <label class="field">Toneladas mov. (t) <input type="number" step="0.01" min="0" name="carga_${i}_mov"></label>
+    <label class="field">Hora <input type="time" name="carga_${i}_hora"></label>
+  </div></div>`).join('');
+
+// render itens checklist
+const tbody = document.getElementById('itensBody');
+tbody.innerHTML = ITENS.map(([n, texto, norma]) => `
+  <tr id="row-item-${n}"><td><span class="num-circle">${n}</span></td><td>${texto}</td>
+  <td><span class="badge badge-gray">${norma}</span></td>
+  <td><div class="check-radio">
+    <label><input type="radio" name="item_${n}" value="SIM"> SIM</label>
+    <label><input type="radio" name="item_${n}" value="NAO"> NÃO</label>
+    <label><input type="radio" name="item_${n}" value="N/A"> N/A</label>
+  </div></td></tr>`).join('');
+
+function val(name){
+  const el = form.querySelector(`[name="${name}"]`);
+  if(!el) return null;
+  if(el.type === 'radio'){ const c = form.querySelector(`input[name="${name}"]:checked`); return c ? c.value : null; }
+  return el.value === '' ? null : el.value;
+}
+function fill(name, v){
+  if(v == null) return;
+  form.querySelectorAll(`[name="${name}"]`).forEach(el => {
+    if(el.type === 'radio') el.checked = (el.value === v);
+    else el.value = v;
+  });
+}
+function respostas(){ return ITENS.map(([n]) => ({ numero: n, resposta: val('item_' + n) })); }
+
+function atualizarContador(){
+  const r = respostas();
+  const c   = r.filter(i => i.resposta).length;
+  const nao = r.filter(i => i.resposta === 'NAO').length;
+  document.getElementById('contador').textContent = `${c}/24` + (nao ? ` · ${nao} NÃO` : '');
+  document.getElementById('progBar').style.width = (c / 24 * 100) + '%';
+  // Highlight rows com NÃO
+  ITENS.forEach(([n]) => {
+    const tr = document.getElementById('row-item-' + n);
+    if(tr) tr.classList.toggle('row-nao', val('item_' + n) === 'NAO');
+  });
+  return { c, nao };
+}
+
+tbody.addEventListener('change', () => { atualizarContador(); refreshSteps(); if(step === 3) revisar(); });
+
+// validação
+function diaErrs(){
+  const e = [];
+  if(!val('data_servico'))        e.push('Informe a data do serviço.');
+  if(!val('porto'))               e.push('Selecione o porto.');
+  if(!val('tecnico_operacoes'))   e.push('Informe o técnico de operações.');
+  if(!val('fiel_armazem'))        e.push('Informe o fiel de armazém.');
+  return e;
+}
+function fichaErrs(){
+  const e = [];
+  if(!val('periodo_inicio') || !val('periodo_fim')) e.push('Informe o período (de/até).');
+  if(!val('berco01_nome') && !val('berco02_nome'))  e.push('Informe ao menos um navio (berço 01 ou 02).');
+  return e;
+}
+function inspErrs(){
+  const e = [];
+  if(!val('data_inspecao'))  e.push('Informe a data da inspeção.');
+  if(!val('hora_operacoes')) e.push('Informe a hora.');
+  const { c, nao } = atualizarContador();
+  if(c < 24) e.push(`Responda os 24 itens (faltam ${24 - c}).`);
+  if(nao > 0 && !val('observacoes_acoes')) e.push('Há item NÃO — descreva observações e ações RIP/ROP.');
+  if(!val('tecnico_nome')) e.push('Informe o técnico na assinatura.');
+  const di = val('data_inspecao'), pi = val('periodo_inicio'), pf = val('periodo_fim');
+  if(di && pi && pf && (di < pi || di > pf)) e.push('Data da inspeção fora do período da ficha.');
+  return e;
+}
+function stepErrs(n){
+  if(n === 0) return diaErrs();
+  if(n === 1) return fichaErrs();
+  if(n === 2) return inspErrs();
+  return [...diaErrs(), ...fichaErrs(), ...inspErrs()];
+}
+
+// wizard
+const btnBack   = document.getElementById('btnBack');
+const btnNext   = document.getElementById('btnNext');
+const btnSubmit = document.getElementById('btnSubmit');
+const btnPdf    = document.getElementById('btnPdf');
+
+function refreshSteps(){
+  const states = [diaErrs().length === 0, fichaErrs().length === 0, inspErrs().length === 0];
+  states.push(states[0] && states[1] && states[2]);
+  document.querySelectorAll('.wstep-btn').forEach((b, i) => {
+    b.classList.toggle('current', i === step);
+    b.classList.toggle('done', states[i] && i !== step);
+  });
+}
+function showStep(n){
+  step = Math.max(0, Math.min(3, n));
+  document.querySelectorAll('.wstep').forEach(s => s.classList.toggle('active', +s.dataset.step === step));
+  document.getElementById('wizBar').style.width = ((step + 1) / 4 * 100) + '%';
+  document.getElementById('stepHint').textContent = `Etapa ${step + 1} de 4 — ${STEP_NAMES[step]}`;
+  btnBack.style.visibility = step === 0 ? 'hidden' : 'visible';
+  btnNext.style.display   = step < 3 ? '' : 'none';
+  btnSubmit.style.display = step === 3 ? '' : 'none';
+  btnPdf.style.display    = step === 3 ? '' : 'none';
+  refreshSteps();
+  if(step === 3) revisar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+document.querySelectorAll('.wstep-btn').forEach(b => { b.onclick = () => showStep(+b.dataset.goto); });
+btnBack.onclick = () => showStep(step - 1);
+btnNext.onclick = () => {
+  const errs = stepErrs(step);
+  if(errs.length){ toast(`Etapa incompleta: ${errs.length} pendência(s) — ${errs[0]}`, 'err'); return; }
+  showStep(step + 1);
+};
+form.addEventListener('change', refreshSteps);
+
+// sincronismos
+form.data_servico?.addEventListener('change', e => {
+  const d = e.target.value;
+  if(d){
+    if(!val('periodo_inicio')) fill('periodo_inicio', d);
+    if(!val('periodo_fim'))    fill('periodo_fim', d);
+    if(!val('data_inspecao'))  fill('data_inspecao', d);
+    if(!val('tecnico_data'))   fill('tecnico_data', d);
+  }
+  refreshSteps();
+});
+form.tecnico_operacoes?.addEventListener('input', e => {
+  if(!val('tecnico_nome')) fill('tecnico_nome', e.target.value);
+});
+document.getElementById('btnPuxarNavios').onclick = () => {
+  const nomes = [val('berco01_nome'), val('berco02_nome')].filter(Boolean);
+  if(nomes.length) fill('navios_atracados', nomes.join(' · '));
+  else toast('Informe ao menos um navio na ficha', 'err');
+};
+document.getElementById('btnTodosSim').onclick = () => {
+  ITENS.forEach(([n]) => { form.querySelector(`input[name="item_${n}"][value="SIM"]`).checked = true; });
+  atualizarContador(); refreshSteps();
+};
+document.getElementById('btnLimpar').onclick = () => {
+  tbody.querySelectorAll('input:checked').forEach(el => el.checked = false);
+  atualizarContador(); refreshSteps();
+};
+
+function revisar(){
+  const d = diaErrs(), f = fichaErrs(), i = inspErrs();
+  const errs = [...d, ...f, ...i];
+  const answered = respostas().filter(x => x.resposta).length;
+  const boxEl = document.getElementById('revisao');
+  const items = [
+    { t: !d.length ? 'Dia e turno preenchidos' : `Dia e turno — ${d.length} pendência(s)`, ok: !d.length },
+    { t: !f.length ? 'Ficha pronta para salvar' : `Ficha — ${f.length} pendência(s)`, ok: !f.length },
+    { t: !i.length ? `Inspeção pronta — ${answered}/24 itens` : `Inspeção — ${i.length} pendência(s)`, ok: !i.length },
+  ];
+  boxEl.innerHTML = items.map(x => `
+    <li class="review-item ${x.ok ? 'ok' : 'bad'}">
+      <span class="review-icon">${x.ok ? '✅' : '⚠️'}</span>
+      <span class="review-text">${x.t}</span>
+    </li>`).join('')
+    + (errs.length
+      ? `<li class="review-item bad"><span class="review-icon">📋</span><span class="review-text"><b>Pendências (${errs.length}):</b><br>• ${errs.join('<br>• ')}</span></li>`
+      : `<li class="review-item ok"><span class="review-icon">🎉</span><span class="review-text"><b>Tudo certo — pode salvar.</b></span></li>`);
+  return errs;
+}
+
+async function loadGrupo(){
+  if(!grupoParam) return;
+  const [f, i] = await Promise.all([
+    DB.listBy('fichas_operacao', 'grupo_id', grupoParam),
+    DB.listBy('inspecoes', 'grupo_id', grupoParam)
+  ]);
+  const ficha = f[0], insp = i[0];
+  if(!ficha && !insp){ toast('Registro diário não encontrado', 'err'); return; }
+  editFichaId = ficha?.id || null; editInspId = insp?.id || null;
+  if(ficha){
+    Object.keys(ficha).forEach(k => fill(k, ficha[k]));
+    (ficha.cargas || []).forEach((c, idx) => {
+      fill(`carga_${idx}_carga`, c.carga); fill(`carga_${idx}_quant`, c.quant_existente);
+      fill(`carga_${idx}_data`, c.quant_data); fill(`carga_${idx}_direcao`, c.direcao);
+      fill(`carga_${idx}_mov`, c.movimentado); fill(`carga_${idx}_hora`, c.hora);
+    });
+    fill('data_servico', ficha.data_servico);
+  }
+  if(insp){
+    Object.keys(insp).forEach(k => { if(!k.startsWith('item_')) fill(k, insp[k]); });
+    (insp.itens || []).forEach(it => fill('item_' + it.numero, it.resposta));
+    if(!ficha) fill('data_servico', insp.data_servico);
+  }
+  atualizarContador();
+  document.getElementById('saveStatus').innerHTML = 'Editando registro diário <b>' + grupoParam + '</b>';
+}
+loadGrupo().catch(e => toast('Erro ao carregar: ' + e.message, 'err')).finally(() => showStep(0));
+atualizarContador();
+showStep(0);
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const errs = [...diaErrs(), ...fichaErrs(), ...inspErrs()];
+  if(errs.length){ toast(`Não salvo: ${errs.length} pendência(s) — ${errs[0]}`, 'err'); return; }
+  const btn = btnSubmit;
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  try{
+    const fd = new FormData(form);
+    const raw = {};
+    for(const [k, v] of fd.entries()) raw[k] = (v === '' ? null : v);
+    const grupo_id = grupoParam || (crypto.randomUUID ? crypto.randomUUID() : 'g-' + Date.now());
+    const data_servico = raw.data_servico;
+
+    const fichaRow = {
+      grupo_id, data_servico,
+      tecnico_operacoes: raw.tecnico_operacoes, fiel_armazem: raw.fiel_armazem,
+      periodo_inicio: raw.periodo_inicio, periodo_fim: raw.periodo_fim,
+      berco01_nome: raw.berco01_nome, berco01_carga: raw.berco01_carga,
+      berco01_movimento: raw.berco01_movimento, berco01_hora: raw.berco01_hora,
+      berco01_operacao: raw.berco01_operacao,
+      berco01_toneladas: raw.berco01_toneladas ? Number(raw.berco01_toneladas) : null,
+      berco01_ate: raw.berco01_ate, berco01_agencia: raw.berco01_agencia, berco01_operador: raw.berco01_operador,
+      berco02_nome: raw.berco02_nome, berco02_carga: raw.berco02_carga,
+      berco02_movimento: raw.berco02_movimento, berco02_hora: raw.berco02_hora,
+      berco02_operacao: raw.berco02_operacao,
+      berco02_toneladas: raw.berco02_toneladas ? Number(raw.berco02_toneladas) : null,
+      berco02_ate: raw.berco02_ate, berco02_agencia: raw.berco02_agencia, berco02_operador: raw.berco02_operador,
+      cargas: LOCAIS.map((local, idx) => ({
+        local, carga: raw[`carga_${idx}_carga`] || null,
+        quant_existente: raw[`carga_${idx}_quant`] ? Number(raw[`carga_${idx}_quant`]) : null,
+        quant_data: raw[`carga_${idx}_data`] || null, direcao: raw[`carga_${idx}_direcao`] || null,
+        movimentado: raw[`carga_${idx}_mov`] ? Number(raw[`carga_${idx}_mov`]) : null,
+        hora: raw[`carga_${idx}_hora`] || null
+      })),
+      observacoes_gpi: raw.observacoes_gpi, observacoes_tecnico: raw.observacoes_tecnico, observacoes_fiel: raw.observacoes_fiel
+    };
+    const inspRow = {
+      grupo_id, data_servico,
+      porto: raw.porto, data_inspecao: raw.data_inspecao, hora_operacoes: raw.hora_operacoes,
+      navios_atracados: raw.navios_atracados, principais_operacoes: raw.principais_operacoes,
+      itens: ITENS.map(([n]) => ({ numero: n, resposta: raw[`item_${n}`] || null })),
+      observacoes_acoes: raw.observacoes_acoes,
+      tecnico_nome: raw.tecnico_nome || raw.tecnico_operacoes, tecnico_data: raw.tecnico_data,
+      chefe_nome: raw.chefe_nome, chefe_data: raw.chefe_data,
+      gerente_nome: raw.gerente_nome, gerente_data: raw.gerente_data
+    };
+
+    let fichaSaved, inspSaved;
+    if(grupoParam){
+      fichaSaved = editFichaId ? await DB.update('fichas_operacao', editFichaId, fichaRow) : await DB.insert('fichas_operacao', fichaRow);
+      inspSaved  = editInspId  ? await DB.update('inspecoes', editInspId, inspRow)         : await DB.insert('inspecoes', inspRow);
+    }else{
+      fichaSaved = await DB.insert('fichas_operacao', fichaRow);
+      inspSaved  = await DB.insert('inspecoes', inspRow);
+    }
+    try{
+      await DB.update('fichas_operacao', fichaSaved.id, { inspecao_id: inspSaved.id });
+      await DB.update('inspecoes', inspSaved.id, { ficha_id: fichaSaved.id });
+    }catch(_){}
+    toast('Registro diário salvo com sucesso!', 'ok');
+    location.search = '?grupo=' + grupo_id;
+  }catch(err){ toast('Erro ao salvar: ' + err.message, 'err'); }
+  finally{
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg> Salvar ficha + inspeção';
+  }
+};
+</script>
+</body>
+</html>

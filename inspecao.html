@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Inspeção das Instalações e Operações Portuárias — CODEBA Porto de Ilhéus.">
+<title>Inspeção Portuária — CODEBA</title>
+<link rel="stylesheet" href="css/styles.css">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="back-link" href="index.html">← Início</a>
+  <div class="brand">
+    <img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA">
+    <span>Inspeção Portuária<small>Fiscalização · Pág. 2–3</small></span>
+  </div>
+  <nav><a href="registro.html">Registro diário →</a></nav>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+<form id="formInsp">
+  <div class="doc-header">
+    <img class="doc-logo" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária"><br>
+    <span class="doc-tag">Inspeção · Páginas 2 e 3</span>
+    <h1>Inspeção das Instalações e Operações Portuárias</h1>
+    <p>Fiscalização · Segurança do trabalho</p>
+  </div>
+  <div class="alert no-print">
+    ℹ Esta inspeção (pág.2–3) faz parte do registro diário conjunto com a ficha (pág.1).
+    O preenchimento normal é pelo <a class="link" href="registro.html">Registro diário</a>.
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">1</span> Identificação</div>
+    <div class="grid g3">
+      <label class="field">Porto
+        <div class="radio-row">
+          <label><input type="radio" name="porto" value="SALVADOR"> Salvador</label>
+          <label><input type="radio" name="porto" value="ARATU"> Aratu</label>
+          <label><input type="radio" name="porto" value="ILHEUS"> Ilhéus</label>
+        </div>
+      </label>
+      <label class="field">Data <input type="date" name="data_inspecao"></label>
+      <label class="field">Hora (principais operações) <input type="time" name="hora_operacoes"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <label class="field">Navios atracados <textarea name="navios_atracados" rows="2" placeholder="Nomes dos navios atracados…"></textarea></label>
+      <label class="field">Principais operações <textarea name="principais_operacoes" rows="2" placeholder="Descreva as principais operações…"></textarea></label>
+    </div>
+    <p class="subtitle"><b>Legenda:</b> L leve · M média · G grave · GR gravíssima · T TAC — <b>Ações:</b> RIP / ROP</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">2</span> Checklist — 24 itens verificados</div>
+    <div class="toolbar no-print">
+      <button type="button" class="btn btn-ghost" id="btnTodosSim">✓ Todos SIM</button>
+      <button type="button" class="btn btn-ghost" id="btnLimpar">✕ Limpar</button>
+      <div class="progress-wrap" style="flex:1">
+        <div class="progress"><i id="progBar"></i></div>
+        <span class="badge badge-blue" id="contador">0/24</span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="check">
+      <thead><tr>
+        <th style="width:52px">Nº</th>
+        <th>Item a ser verificado</th>
+        <th style="width:120px">Norma / Grau</th>
+        <th style="width:260px">Resposta</th>
+      </tr></thead>
+      <tbody id="itensBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">3</span> Observações e ações (RIP / ROP)</div>
+    <label class="field">Descreva por item
+      <textarea name="observacoes_acoes" rows="6" placeholder="Ex.: Item 06 — NÃO — escada sem rede protetora. Ação: ROP…"></textarea>
+    </label>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">4</span> Assinaturas</div>
+    <div class="grid g3">
+      <label class="field">Técnico — nome <input name="tecnico_nome" placeholder="Nome + carimbo"></label>
+      <label class="field">Técnico — data <input type="date" name="tecnico_data"></label>
+      <label class="field">Rubrica <input placeholder="Rubrica"></label>
+      <label class="field">Chefe de área — nome <input name="chefe_nome"></label>
+      <label class="field">Chefe de área — data <input type="date" name="chefe_data"></label>
+      <label class="field">Rubrica <input placeholder="Rubrica"></label>
+      <label class="field">Gerente do porto — nome <input name="gerente_nome"></label>
+      <label class="field">Gerente do porto — data <input type="date" name="gerente_data"></label>
+      <label class="field">Rubrica <input placeholder="Rubrica"></label>
+    </div>
+  </div>
+
+  <div class="sticky-actions no-print">
+    <p class="subtitle" id="saveStatus" style="margin:0 0 10px"></p>
+    <div class="btn-row" style="margin-top:0">
+      <button type="submit" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+        Salvar inspeção
+      </button>
+      <button type="button" class="btn btn-success" onclick="window.print()">📄 Gerar PDF / Imprimir</button>
+      <a class="btn btn-ghost" href="index.html">← Voltar</a>
+    </div>
+  </div>
+</form>
+<div class="footer">CODEBA · Fiscalização de Operações Portuárias e Segurança do Trabalho</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script>
+const ITENS = [
+  [1, "Foram providenciados rádios para comunicação bilateral em trabalhos com cargas içadas nas operações dos navios na faixa do cais?", "4/M"],
+  [2, "Alguma atracação/desatracação foi acompanhada? Foi observada a comunicação bilateral entre a Praticagem e Técnico de sistema, bem como uso adequado de EPI (coletes salva-vidas adequados e higienizados, capacete, luvas etc.) pelos trabalhadores de atracação?", "4/M"],
+  [3, "Os guindastes de terra em operação foram verificados pelos Operadores responsáveis?", "4/M"],
+  [4, "Os operadores de máquinas e equipamentos são cadastrados e habilitados para operação?", "4/M, 1/GR, 2/GR"],
+  [5, "Os talhadores portuários estão escalados para as operações?", "2/T"],
+  [6, "As escadas de acesso ao navio estão em condições de uso (bom estado de conservação, limpeza, guarnecida com rede protetora, pisos antiderrapantes, corrimão rígido, apoiadas em terra, dispositivo rotativo, fora do raio de ação da lança etc.)?", "4/T"],
+  [7, "Foi observada a proibição do uso de extensões elétricas fixadas em escada?", "4/M"],
+  [8, "Os equipamentos terrestres de guindar emitem sinais sonoros e luminosos durante o seu deslocamento?", "4/M"],
+  [9, "Há possibilidade de realização simultânea de atividades em alguma operação em andamento? Caso positivo, foi informada a proibição e paralisadas as operações?", "4/M"],
+  [10, "As instalações sanitárias, ao longo da faixa do cais, estão em bom estado de uso e higienização?", "3/L"],
+  [11, "Foram observadas inadequações nos resíduos oriundos de movimentação portuária?", "2, 1/G"],
+  [12, "Em alguma operação e/ou instalação portuária foi observado o risco efetivo de contaminação ambiental?", "1/G, 2/G"],
+  [13, "Existem trabalhos de reparos (pinturas, descascamentos etc.) em costados de navios atracados? Estes foram avisados e liberados pela Gerência do porto?", "1/G"],
+  [14, "Existem latas de tintas ou outras substâncias à beira do cais que possam cair no mar?", "1/G"],
+  [15, "Foi registrado algum incidente/acidente nas instalações ou operações?", "4/M, 1/G, 2/G"],
+  [16, "As operações portuárias acompanhadas se realizam com regularidade, segurança, eficiência e eficácia?", "5/L, 1/M, 3/M, 4/M, 1/G, 6/T"],
+  [17, "Nas operações portuárias acompanhadas, os veículos (carretas) estão em boas condições de operação?", "4/M, 3/T, 4/T"],
+  [18, "Os veículos e vagões utilizados para o transporte de granéis sólidos estão cobertos/enlonados para trânsito e estacionamento em área portuária?", "4/M, 5/T"],
+  [19, "Foi observado o uso de quadro posicionado nas operações de movimentação de contêiner?", "4/M"],
+  [20, "Os acessórios e dispositivos (anéis de carga, manilhas, sapatilhas e cabos de aço) utilizados para içamento de carga estão visivelmente em bom estado?", "4/M"],
+  [21, "Nas operações envolvendo líquidos e gases inflamáveis é observado o cumprimento da NR-16 (Atividades e Operações Perigosas) e da NR-20 (Líquidos e Combustíveis Inflamáveis)?", "4/M"],
+  [22, "As vias de circulação do porto estão livres e desobstruídas para a movimentação segura de passageiros vindo de Cruzeiros/Transatlântico?", "4/M"],
+  [23, "Nas instalações portuárias as placas de identificação dos meios de comunicação com a ANTAQ estão visíveis e em bom estado de conservação?", "2/L"],
+  [24, "Foi realizada alguma paralisação devido a situações e/ou condições de risco grave e iminente nas operações portuárias?", "1/M"]
+];
+
+const tbody = document.getElementById('itensBody');
+tbody.innerHTML = ITENS.map(([n, texto, norma]) => `
+  <tr id="row-insp-${n}">
+    <td><span class="num-circle">${n}</span></td>
+    <td>${texto}</td>
+    <td><span class="badge badge-gray">${norma}</span></td>
+    <td><div class="check-radio">
+      <label><input type="radio" name="item_${n}" value="SIM"> SIM</label>
+      <label><input type="radio" name="item_${n}" value="NAO"> NÃO</label>
+      <label><input type="radio" name="item_${n}" value="N/A"> N/A</label>
+    </div></td>
+  </tr>`).join('');
+
+function atualizarContador(){
+  let c = 0, nao = 0;
+  ITENS.forEach(([n]) => {
+    const sel = document.querySelector(`input[name="item_${n}"]:checked`);
+    if(sel){
+      c++;
+      if(sel.value === 'NAO') nao++;
+    }
+    const tr = document.getElementById('row-insp-' + n);
+    if(tr) tr.classList.toggle('row-nao', sel?.value === 'NAO');
+  });
+  document.getElementById('contador').textContent = `${c}/24` + (nao ? ` · ${nao} NÃO` : '');
+  document.getElementById('progBar').style.width = (c / 24 * 100) + '%';
+}
+tbody.addEventListener('change', atualizarContador);
+
+document.getElementById('btnTodosSim').onclick = () => {
+  ITENS.forEach(([n]) => { document.querySelector(`input[name="item_${n}"][value="SIM"]`).checked = true; });
+  atualizarContador();
+};
+document.getElementById('btnLimpar').onclick = () => {
+  document.querySelectorAll('#itensBody input:checked').forEach(el => el.checked = false);
+  atualizarContador();
+};
+
+const params = new URLSearchParams(location.search);
+const editId = params.get('id');
+const form   = document.getElementById('formInsp');
+
+function fill(name, val){
+  if(val == null) return;
+  form.querySelectorAll(`[name="${name}"]`).forEach(el => {
+    if(el.type === 'radio') el.checked = (el.value === val);
+    else el.value = val;
+  });
+}
+
+async function loadEdit(){
+  if(!editId) return;
+  const r = await DB.get('inspecoes', editId);
+  if(!r) return;
+  Object.keys(r).forEach(k => { if(!k.startsWith('item_')) fill(k, r[k]); });
+  (r.itens || []).forEach(it => fill('item_' + it.numero, it.resposta));
+  atualizarContador();
+  document.getElementById('saveStatus').textContent = 'Editando registro ' + editId;
+}
+loadEdit();
+atualizarContador();
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const fd  = new FormData(form);
+  const row = {};
+  for(const [k,v] of fd.entries()) row[k] = (v === '' ? null : v);
+  row.itens = ITENS.map(([n]) => ({ numero: n, resposta: row[`item_${n}`] || null }));
+  ITENS.forEach(([n]) => delete row[`item_${n}`]);
+  if(!row.data_servico) row.data_servico = row.data_inspecao || null;
+  try{
+    if(editId){ await DB.update('inspecoes', editId, row); toast('Inspeção atualizada! Complete o conjunto pelo registro diário.', 'ok'); }
+    else{ const saved = await DB.insert('inspecoes', row); toast('Inspeção salva!', 'ok'); location.search = '?id=' + saved.id; return; }
+  }catch(err){ toast('Erro ao salvar: ' + err.message, 'err'); }
+  finally{ btn.disabled = false; btn.textContent = 'Salvar inspeção'; }
+};
+</script>
+</body>
+</html>

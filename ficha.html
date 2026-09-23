@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Ficha de Operações do Porto de Ilhéus — CODEBA.">
+<title>Ficha de Operações — Porto de Ilhéus</title>
+<link rel="stylesheet" href="css/styles.css">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="back-link" href="index.html">← Início</a>
+  <div class="brand">
+    <img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA">
+    <span>Ficha de Operações<small>Porto de Ilhéus · Pág. 1</small></span>
+  </div>
+  <nav><a href="registro.html">Registro diário →</a></nav>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+<form id="formFicha">
+  <div class="doc-header">
+    <img class="doc-logo" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária"><br>
+    <span class="doc-tag">Ficha · Página 1</span>
+    <h1>Ficha de Operações — Porto de Ilhéus</h1>
+    <p>Técnico · Fiel de armazém · Navios · Cargas · Observações</p>
+  </div>
+  <div class="alert no-print">
+    ℹ Esta ficha (pág.1) faz parte do registro diário conjunto com a inspeção (pág.2–3).
+    O preenchimento normal é pelo <a class="link" href="registro.html">Registro diário</a>.
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">1</span> Responsáveis / Período</div>
+    <div class="grid g2">
+      <label class="field">Técnico de operações <input name="tecnico_operacoes" placeholder="Nome completo"></label>
+      <label class="field">Fiel de armazém <input name="fiel_armazem" placeholder="Nome completo"></label>
+      <label class="field">Período — de <input type="date" name="periodo_inicio"></label>
+      <label class="field">Período — até <input type="date" name="periodo_fim"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">2</span> Navios — Berço 01</div>
+    <div class="grid g2">
+      <label class="field">Nome do navio <input name="berco01_nome" placeholder="Ex.: MV Atlântico"></label>
+      <label class="field">Carga <input name="berco01_carga" placeholder="Ex.: Soja a granel"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g3">
+      <label class="field">Movimento
+        <div class="radio-row">
+          <label><input type="radio" name="berco01_movimento" value="ATRACOU"> Atracou</label>
+          <label><input type="radio" name="berco01_movimento" value="DESATRACOU"> Desatracou</label>
+        </div>
+      </label>
+      <label class="field">Hora <input type="time" name="berco01_hora"></label>
+      <label class="field">Até 07:00 de <input type="date" name="berco01_ate"></label>
+    </div>
+    <br>
+    <div class="grid g3">
+      <label class="field">Operação
+        <div class="radio-row">
+          <label><input type="radio" name="berco01_operacao" value="CARREGOU"> Carregou</label>
+          <label><input type="radio" name="berco01_operacao" value="DESCARREGOU"> Descarregou</label>
+        </div>
+      </label>
+      <label class="field">Toneladas (t) <input type="number" step="0.01" min="0" name="berco01_toneladas" placeholder="0,00"></label>
+      <span></span>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <label class="field">Agência marítima <input name="berco01_agencia"></label>
+      <label class="field">Operador portuário <input name="berco01_operador"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">3</span> Navios — Berço 02</div>
+    <div class="grid g2">
+      <label class="field">Nome do navio <input name="berco02_nome" placeholder="Ex.: MV Pacífico"></label>
+      <label class="field">Carga <input name="berco02_carga"></label>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g3">
+      <label class="field">Movimento
+        <div class="radio-row">
+          <label><input type="radio" name="berco02_movimento" value="ATRACOU"> Atracou</label>
+          <label><input type="radio" name="berco02_movimento" value="DESATRACOU"> Desatracou</label>
+        </div>
+      </label>
+      <label class="field">Hora <input type="time" name="berco02_hora"></label>
+      <label class="field">Até 07:00 de <input type="date" name="berco02_ate"></label>
+    </div>
+    <br>
+    <div class="grid g3">
+      <label class="field">Operação
+        <div class="radio-row">
+          <label><input type="radio" name="berco02_operacao" value="CARREGOU"> Carregou</label>
+          <label><input type="radio" name="berco02_operacao" value="DESCARREGOU"> Descarregou</label>
+        </div>
+      </label>
+      <label class="field">Toneladas (t) <input type="number" step="0.01" min="0" name="berco02_toneladas" placeholder="0,00"></label>
+      <span></span>
+    </div>
+    <div class="divider"></div>
+    <div class="grid g2">
+      <label class="field">Agência marítima <input name="berco02_agencia"></label>
+      <label class="field">Operador portuário <input name="berco02_operador"></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">4</span> Cargas — Armazéns e Pátios (6 locais)</div>
+    <p class="subtitle">Preencha cada local conforme o documento original.</p>
+    <div id="cargas"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">5</span> Observações</div>
+    <label class="field">Observações do GPI <textarea name="observacoes_gpi" rows="3"></textarea></label>
+    <br>
+    <label class="field">Observações do técnico de operações <textarea name="observacoes_tecnico" rows="3"></textarea></label>
+    <br>
+    <label class="field">Observações do fiel de armazém <textarea name="observacoes_fiel" rows="3"></textarea></label>
+  </div>
+
+  <div class="sticky-actions no-print">
+    <p class="subtitle" id="saveStatus" style="margin:0 0 10px">Preencha e salve. Depois gere o PDF final.</p>
+    <div class="btn-row" style="margin-top:0">
+      <button type="submit" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+        Salvar ficha
+      </button>
+      <button type="button" class="btn btn-success" onclick="window.print()">
+        📄 Gerar PDF / Imprimir
+      </button>
+      <a class="btn btn-ghost" href="index.html">← Voltar</a>
+    </div>
+  </div>
+</form>
+<div class="footer">CODEBA · Porto de Ilhéus — Ficha de Operações</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script>
+const LOCAIS = ['ARMAZÉM 01 SUL','ARMAZÉM 01 NORTE','ARMAZÉM 02','PÁTIO CARGA GERAL','PÁTIO I / ARMAZÉM 01','PÁTIO II / ARMAZÉM 02'];
+const cargasBox = document.getElementById('cargas');
+cargasBox.innerHTML = LOCAIS.map((local, i) => `
+  <div class="local-block">
+    <h4>${local}</h4>
+    <div class="grid g2">
+      <label class="field">Carga <input name="carga_${i}_carga" placeholder="Tipo de carga"></label>
+      <label class="field">Quant. existente (t) <input type="number" step="0.01" min="0" name="carga_${i}_quant" placeholder="0,00"></label>
+      <label class="field">Até às 07:00h de <input type="date" name="carga_${i}_data"></label>
+      <label class="field">Movimentação
+        <div class="radio-row">
+          <label><input type="radio" name="carga_${i}_direcao" value="ENTROU"> Entrou</label>
+          <label><input type="radio" name="carga_${i}_direcao" value="SAIU"> Saiu</label>
+        </div>
+      </label>
+      <label class="field">Toneladas mov. (t) <input type="number" step="0.01" min="0" name="carga_${i}_mov" placeholder="0,00"></label>
+      <label class="field">Hora <input type="time" name="carga_${i}_hora"></label>
+    </div>
+  </div>`).join('');
+
+const params = new URLSearchParams(location.search);
+const editId = params.get('id');
+const form   = document.getElementById('formFicha');
+
+function fill(name, val){
+  if(val == null) return;
+  const els = form.querySelectorAll(`[name="${name}"]`);
+  els.forEach(el => {
+    if(el.type === 'radio') el.checked = (el.value === val);
+    else el.value = val;
+  });
+}
+
+async function loadEdit(){
+  if(!editId) return;
+  const r = await DB.get('fichas_operacao', editId);
+  if(!r){ alert('Registro não encontrado'); return; }
+  Object.keys(r).forEach(k => fill(k, r[k]));
+  (r.cargas || []).forEach((c, i) => {
+    fill(`carga_${i}_carga`, c.carga); fill(`carga_${i}_quant`, c.quant_existente);
+    fill(`carga_${i}_data`, c.quant_data); fill(`carga_${i}_direcao`, c.direcao);
+    fill(`carga_${i}_mov`, c.movimentado); fill(`carga_${i}_hora`, c.hora);
+  });
+  document.getElementById('saveStatus').innerHTML = 'Editando registro <b>' + editId + '</b>';
+}
+loadEdit();
+
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const btn = form.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  const fd = new FormData(form);
+  const row = {};
+  for(const [k,v] of fd.entries()) row[k] = v === '' ? null : v;
+  row.cargas = LOCAIS.map((local, i) => ({
+    local,
+    carga: row[`carga_${i}_carga`] || null,
+    quant_existente: row[`carga_${i}_quant`] ? Number(row[`carga_${i}_quant`]) : null,
+    quant_data: row[`carga_${i}_data`] || null,
+    direcao: row[`carga_${i}_direcao`] || null,
+    movimentado: row[`carga_${i}_mov`] ? Number(row[`carga_${i}_mov`]) : null,
+    hora: row[`carga_${i}_hora`] || null
+  }));
+  ['berco01_toneladas','berco02_toneladas'].forEach(k => { if(row[k] != null) row[k] = Number(row[k]); });
+  if(!row.data_servico) row.data_servico = row.periodo_inicio || null;
+  try{
+    if(editId){ await DB.update('fichas_operacao', editId, row); toast('Ficha atualizada! Complete o conjunto pelo registro diário.', 'ok'); }
+    else{
+      const saved = await DB.insert('fichas_operacao', row);
+      toast('Ficha salva!', 'ok');
+      location.search = '?id=' + saved.id;
+      return;
+    }
+  }catch(err){ toast('Erro ao salvar: ' + err.message, 'err'); }
+  finally{ btn.disabled = false; btn.textContent = 'Salvar ficha'; }
+};
+</script>
+</body>
+</html>

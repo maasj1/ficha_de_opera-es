@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Sistema de registro diário de operações portuárias do Porto de Ilhéus — CODEBA.">
+<title>CODEBA · Sistema Portuário — Ilhéus</title>
+<link rel="stylesheet" href="css/styles.css">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária">
+    <span>Porto de Ilhéus<small>Sistema de operações</small></span>
+  </div>
+  <nav>
+    <a href="index.html" class="active">Início</a>
+    <a href="registro.html">Novo registro</a>
+  </nav>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero" id="heroBox">
+    <h2>📋 Registros diários</h2>
+    <p>Ficha de operações + inspeção do dia, salvas como um único documento.</p>
+    <div class="meta">
+      <span class="badge badge-gold" id="heroData">—</span>
+      <span class="badge badge-blue">Porto de Ilhéus</span>
+      <a class="btn btn-gold" href="registro.html" style="margin-left:auto">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo registro
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-inner">
+        <div>
+          <b id="stReg">0</b>
+          <span class="label">Registros diários</span>
+        </div>
+        <span class="stat-icon">📁</span>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-inner">
+        <div>
+          <b id="stComp">0</b>
+          <span class="label">Completos</span>
+        </div>
+        <span class="stat-icon">✅</span>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-inner">
+        <div>
+          <b id="stNao">0</b>
+          <span class="label">Não conformidades</span>
+        </div>
+        <span class="stat-icon">⚠️</span>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-inner">
+        <div>
+          <b id="stHoje">0</b>
+          <span class="label">Registros hoje</span>
+        </div>
+        <span class="stat-icon">📅</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista -->
+  <div class="card">
+    <div class="toolbar no-print">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search" id="search" placeholder="Buscar por data, técnico, navio, porto…" style="flex:1;max-width:420px">
+      <button class="btn btn-ghost" onclick="carregar()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Recarregar
+      </button>
+    </div>
+    <div id="lista"></div>
+  </div>
+
+  <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script>
+// Data de hoje no hero
+(function(){
+  const d = new Date();
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  document.getElementById('heroData').textContent =
+    d.getDate() + ' ' + meses[d.getMonth()] + '. ' + d.getFullYear();
+})();
+
+let grupos = [];
+
+function fmt(d){
+  if(!d) return '—';
+  try{ return new Date(d).toLocaleString('pt-BR'); }catch{ return d; }
+}
+function fmtData(d){
+  if(!d) return { day:'—', mon:'' };
+  try{
+    const dt = new Date(d + 'T12:00:00');
+    const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+    return { day: dt.getDate(), mon: meses[dt.getMonth()] };
+  }catch{ return { day: d.slice(8,10)||'—', mon:'' }; }
+}
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function carregar(){
+  skeleton(document.getElementById('lista'), 4);
+  try{
+    const [fichas, insps] = await Promise.all([DB.list('fichas_operacao'), DB.list('inspecoes')]);
+    const map = new Map();
+    fichas.forEach(f => {
+      const g = f.grupo_id || ('ficha:' + f.id);
+      if(!map.has(g)) map.set(g, { grupo: g, ficha: null, insp: null });
+      map.get(g).ficha = f;
+    });
+    insps.forEach(i => {
+      const g = i.grupo_id || ('insp:' + i.id);
+      if(!map.has(g)) map.set(g, { grupo: g, ficha: null, insp: null });
+      map.get(g).insp = i;
+    });
+    grupos = [...map.values()].sort((a, b) =>
+      String(b.ficha?.data_servico || b.insp?.data_servico || b.ficha?.created_at || b.insp?.created_at || '')
+      .localeCompare(String(a.ficha?.data_servico || a.insp?.data_servico || a.ficha?.created_at || a.insp?.created_at || '')));
+    render(); renderStats();
+  }catch(e){
+    document.getElementById('lista').innerHTML = '<div class="alert">⚠ Erro ao carregar: ' + esc(e.message) + '</div>';
+    toast('Erro ao carregar: ' + e.message, 'err');
+  }
+}
+
+function renderStats(){
+  const completos = grupos.filter(g => g.ficha && g.insp).length;
+  let nao = 0;
+  grupos.forEach(g => (g.insp?.itens || []).forEach(it => { if(it.resposta === 'NAO') nao++; }));
+  document.getElementById('stReg').textContent  = grupos.length;
+  document.getElementById('stComp').textContent = completos;
+  document.getElementById('stNao').textContent  = nao;
+  const hoje = new Date().toISOString().slice(0, 10);
+  document.getElementById('stHoje').textContent = grupos.filter(g =>
+    (g.ficha?.data_servico || g.insp?.data_servico || '').startsWith(hoje)).length;
+}
+
+function render(){
+  const q   = (document.getElementById('search').value || '').toLowerCase();
+  const box = document.getElementById('lista');
+  const rows = grupos.filter(g => JSON.stringify(g).toLowerCase().includes(q));
+
+  if(!rows.length){
+    box.innerHTML = `
+      <div class="empty">
+        <span class="big">🗂️</span>
+        <h3>Nenhum registro encontrado</h3>
+        ${q ? '<p>Tente outros termos de busca.</p>' : '<a class="btn btn-primary" href="registro.html" style="margin-top:12px">Criar primeiro registro</a>'}
+      </div>`;
+    return;
+  }
+
+  box.innerHTML = rows.map((g, idx) => {
+    const f = g.ficha, i = g.insp;
+    const completo = !!(f && i);
+    const rawData = f?.data_servico || i?.data_servico || f?.periodo_inicio || i?.data_inspecao || '';
+    const { day, mon } = fmtData(rawData);
+    const tec    = f?.tecnico_operacoes || i?.tecnico_nome || 'Sem técnico';
+    const navios = [f?.berco01_nome, f?.berco02_nome].filter(Boolean).join(' · ') || (i?.navios_atracados || '').slice(0, 60) || '—';
+    const total  = (i?.itens || []).filter(x => x.resposta).length;
+    const nao    = (i?.itens || []).filter(x => x.resposta === 'NAO').length;
+
+    return `
+    <div class="hist-item" style="animation-delay:${idx * .04}s">
+      <div class="hist-date-badge">
+        <span>${esc(String(day))}</span>
+        <small>${esc(mon)}</small>
+      </div>
+      <div class="hist-body">
+        <b>📍 ${esc(tec)}</b>
+        <div class="hist-badges">
+          ${completo
+            ? '<span class="badge badge-green">✓ Completo</span>'
+            : '<span class="badge badge-red">⚠ Incompleto — só ' + (f ? 'ficha' : 'inspeção') + '</span>'}
+          <span class="badge badge-gray">🚢 ${esc(navios)}</span>
+          ${i ? (nao
+            ? `<span class="badge badge-red">⚠ ${nao} não conf.</span>`
+            : `<span class="badge badge-green">✓ Sem NÃO</span>`) + ` <span class="badge badge-blue">${total}/24</span>` : ''}
+        </div>
+        <div class="hist-meta">
+          ${f ? '📄 Ficha ' + fmt(f.created_at) : '<em>Ficha ausente</em>'}
+          &nbsp;·&nbsp;
+          ${i ? '🔍 Inspeção ' + fmt(i.created_at) : '<em>Inspeção ausente</em>'}
+        </div>
+      </div>
+      <div class="hist-actions">
+        <a class="btn btn-ghost" href="registro.html?grupo=${encodeURIComponent(g.grupo)}">
+          ${completo ? '📄 Abrir / PDF' : '✏️ Completar'}
+        </a>
+        <button class="btn btn-danger" onclick="excluirGrupo('${esc(g.grupo)}')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Excluir
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function excluirGrupo(grupo){
+  if(!confirm('Excluir o registro diário (ficha + inspeção)?')) return;
+  try{
+    const g = grupos.find(x => String(x.grupo) === String(grupo));
+    if(!g) return;
+    if(g.ficha) await DB.remove('fichas_operacao', g.ficha.id);
+    if(g.insp)  await DB.remove('inspecoes', g.insp.id);
+    toast('Registro diário excluído', 'ok');
+    carregar();
+  }catch(e){ toast('Erro ao excluir: ' + e.message, 'err'); }
+}
+
+document.getElementById('search').oninput = render;
+carregar();
+</script>
+</body>
+</html>
