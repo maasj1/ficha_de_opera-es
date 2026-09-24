@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Usuários — CODEBA Porto de Ilhéus</title>
+<link rel="stylesheet" href="css/styles.css?v=3">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>body{visibility:hidden}</style>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="back-link" href="index.html">← Início</a>
+  <div class="brand"><img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA"><span>Usuários<small>Gestão de perfis</small></span></div>
+  <span class="user-box no-print" id="userBox" style="display:none"></span>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1>Usuários</h1>
+      <p>Defina nome, função e setor de cada técnico. A função preenche os campos automaticamente nos formulários.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="subtitle">Como funciona: o gestor cria o acesso em <b>Authentication &gt; Users</b> no painel do Supabase → o técnico entra uma vez (o perfil aparece aqui) → complete função e setor abaixo.</p>
+    <div id="lista"></div>
+  </div>
+
+  <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script>Auth.require();</script>
+<script>
+const FUNCOES = [
+  ['', '— Sem função —'],
+  ['tecnico', 'Técnico de Operações (preenche campos de técnico)'],
+  ['fiel', 'Fiel de Armazém (preenche campo de fiel)'],
+  ['chefe', 'Chefe de Área (assinatura)'],
+  ['gerente', 'Gerente do Porto (assinatura)'],
+  ['outro', 'Outra função']
+];
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function opt(list, val){
+  return list.map(([v, t]) => `<option value="${v}"${String(v) === String(val ?? '') ? ' selected' : ''}>${t}</option>`).join('');
+}
+
+async function carregar(){
+  if(!(await Auth.isGestor())){
+    toast('Acesso restrito ao gestor.', 'err');
+    location.replace('index.html');
+    return;
+  }
+  skeleton(document.getElementById('lista'), 3);
+  try{
+    const sb = DB.getClient();
+    const { data, error } = await sb.from('profiles').select('*').order('nome', { ascending: true });
+    if(error) throw error;
+    render(data || []);
+  }catch(e){
+    document.getElementById('lista').innerHTML = '<div class="alert">Erro ao carregar: ' + esc(e.message) + '</div>';
+  }
+}
+
+function render(rows){
+  const box = document.getElementById('lista');
+  if(!rows.length){
+    box.innerHTML = '<div class="empty">Nenhum perfil ainda.<br>Os perfis aparecem aqui após o primeiro login de cada usuário.</div>';
+    return;
+  }
+  box.innerHTML = rows.map(p => `
+    <div class="hist-item" data-id="${esc(p.id)}">
+      <div style="flex:1;display:grid;gap:10px">
+        <div class="grid g2">
+          <label class="field">Nome <input data-f="nome" value="${esc(p.nome || '')}" placeholder="Nome completo"></label>
+          <label class="field">Setor <input data-f="setor" value="${esc(p.setor || '')}" placeholder="Ex.: Operações, Armazém"></label>
+        </div>
+        <div class="grid g2">
+          <label class="field">Função <select data-f="funcao">${opt(FUNCOES, p.funcao)}</select></label>
+          <label class="field">Permissão <select data-f="papel">${opt([['tecnico', 'Técnico'], ['gestor', 'Gestor']], p.papel)}</select></label>
+        </div>
+        <small style="color:var(--muted)">${esc(String(p.id).slice(0, 8))}…</small>
+      </div>
+      <div class="hist-actions">
+        <button class="btn btn-primary" onclick="salvar('${esc(p.id)}', this)">Salvar</button>
+      </div>
+    </div>`).join('');
+}
+
+async function salvar(id, btn){
+  const card = document.querySelector(`.hist-item[data-id="${id}"]`);
+  const row = {};
+  card.querySelectorAll('[data-f]').forEach(el => { row[el.dataset.f] = el.value === '' ? null : el.value; });
+  btn.disabled = true;
+  try{
+    const sb = DB.getClient();
+    const { error } = await sb.from('profiles').update(row).eq('id', id);
+    if(error) throw error;
+    toast('Perfil atualizado.', 'ok');
+  }catch(e){ toast('Erro ao salvar: ' + e.message, 'err'); }
+  finally{ btn.disabled = false; }
+}
+
+carregar();
+</script>
+</body>
+</html>

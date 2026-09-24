@@ -89,6 +89,7 @@ function friendlyError(err) {
         password: String(fd.get('senha'))
       });
       if (error) throw error;
+      try { await Auth.ensureProfile(); } catch (_) {}
       location.replace(next);
     } catch (err) {
       toast(friendlyError(err), 'err');

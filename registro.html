@@ -62,7 +62,7 @@
     <div class="section-title"><span class="num">1</span> Dia e turno</div>
     <p class="subtitle">Vale para as 3 páginas. Data e técnico são copiados para o resto do formulário.</p>
     <div class="grid g2">
-      <label class="field">Data do serviço * <input type="date" name="data_servico" required></label>
+      <label class="field">Data do serviço <input type="date" name="data_servico"></label>
       <label class="field">Porto *
         <div class="radio-row">
           <label><input type="radio" name="porto" value="SALVADOR"> Salvador</label>
@@ -70,8 +70,8 @@
           <label><input type="radio" name="porto" value="ILHEUS" checked> Ilhéus</label>
         </div>
       </label>
-      <label class="field">Técnico de operações * <input name="tecnico_operacoes" placeholder="Nome completo" required></label>
-      <label class="field">Fiel de armazém * <input name="fiel_armazem" placeholder="Nome completo" required></label>
+      <label class="field">Técnico de operações <input name="tecnico_operacoes" placeholder="Nome completo"></label>
+      <label class="field">Fiel de armazém <input name="fiel_armazem" placeholder="Nome completo"></label>
     </div>
   </div>
   </section>
@@ -81,13 +81,13 @@
   <div class="card">
     <div class="section-title"><span class="num">2</span> Ficha de operações</div>
     <div class="grid g2">
-      <label class="field">Período — de * <input type="date" name="periodo_inicio" required></label>
-      <label class="field">Período — até * <input type="date" name="periodo_fim" required></label>
+      <label class="field">Período — de <input type="date" name="periodo_inicio"></label>
+      <label class="field">Período — até <input type="date" name="periodo_fim"></label>
     </div>
     <div class="divider"></div>
     <div class="sub-title">Berço 01</div>
     <div class="grid g2">
-      <label class="field">Nome do navio * <input name="berco01_nome" placeholder="Ex.: MV Atlântico"></label>
+      <label class="field">Nome do navio <input name="berco01_nome" placeholder="Ex.: MV Atlântico"></label>
       <label class="field">Carga <input name="berco01_carga" placeholder="Ex.: Soja a granel"></label>
     </div>
     <div class="divider"></div>
@@ -166,9 +166,9 @@
   <div class="card">
     <div class="section-title"><span class="num">3</span> Inspeção</div>
     <div class="grid g3">
-      <label class="field">Data da inspeção * <input type="date" name="data_inspecao" required></label>
-      <label class="field">Hora * <input type="time" name="hora_operacoes" required></label>
-      <label class="field">Técnico (assinatura) * <input name="tecnico_nome" required></label>
+      <label class="field">Data da inspeção <input type="date" name="data_inspecao"></label>
+      <label class="field">Hora <input type="time" name="hora_operacoes"></label>
+      <label class="field">Técnico (assinatura) <input name="tecnico_nome"></label>
     </div>
     <div class="divider"></div>
     <div class="grid g2">
@@ -195,7 +195,7 @@
         <th style="width:52px">Nº</th>
         <th>Item</th>
         <th style="width:120px">Norma/Grau</th>
-        <th style="width:260px">Resposta *</th>
+        <th style="width:260px">Resposta</th>
       </tr></thead>
       <tbody id="itensBody"></tbody>
     </table>
@@ -220,7 +220,7 @@
   <section class="wstep" data-step="3">
   <div class="card">
     <div class="section-title"><span class="num">4</span> Revisão</div>
-    <p class="subtitle">Confira as pendências. O salvamento só conclui com ficha e inspeção válidas.</p>
+    <p class="subtitle">Confira o preenchimento antes de salvar. Nenhum campo é obrigatório.</p>
     <ul id="revisao" style="list-style:none;margin:0;padding:0;display:grid;gap:10px"></ul>
   </div>
   </section>
@@ -367,12 +367,6 @@ function inspErrs(){
   if(di && pi && pf && (di < pi || di > pf)) e.push('Data da inspeção fora do período da ficha.');
   return e;
 }
-function stepErrs(n){
-  if(n === 0) return diaErrs();
-  if(n === 1) return fichaErrs();
-  if(n === 2) return inspErrs();
-  return [...diaErrs(), ...fichaErrs(), ...inspErrs()];
-}
 
 // wizard
 const btnBack   = document.getElementById('btnBack');
@@ -403,11 +397,7 @@ function showStep(n){
 }
 document.querySelectorAll('.wstep-btn').forEach(b => { b.onclick = () => showStep(+b.dataset.goto); });
 btnBack.onclick = () => showStep(step - 1);
-btnNext.onclick = () => {
-  const errs = stepErrs(step);
-  if(errs.length){ toast(`Etapa incompleta: ${errs.length} pendência(s) — ${errs[0]}`, 'err'); return; }
-  showStep(step + 1);
-};
+btnNext.onclick = () => showStep(step + 1);
 form.addEventListener('change', refreshSteps);
 
 // sincronismos
@@ -488,11 +478,11 @@ async function loadGrupo(){
 loadGrupo().catch(e => toast('Erro ao carregar: ' + e.message, 'err')).finally(() => showStep(0));
 atualizarContador();
 showStep(0);
+// Novo registro: preenche técnico/fiel/etc. conforme a função do usuário logado
+if(!grupoParam) Auth.autofill(form).catch(() => {});
 
 form.onsubmit = async (e) => {
   e.preventDefault();
-  const errs = [...diaErrs(), ...fichaErrs(), ...inspErrs()];
-  if(errs.length){ toast(`Não salvo: ${errs.length} pendência(s) — ${errs[0]}`, 'err'); return; }
   const btn = btnSubmit;
   btn.disabled = true; btn.textContent = 'Salvando…';
   try{

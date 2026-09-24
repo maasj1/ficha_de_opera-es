@@ -18,8 +18,8 @@ inspecao.html  → edição avulsa só da pág.2–3 (vinculada ao grupo quando 
 ```
 
 Regras do conjunto:
-- Obrigatórios: data do serviço, porto, técnico, fiel, período, ao menos 1 navio, data/hora da inspeção, **os 24 itens**, assinatura do técnico.
-- Se houver item **NÃO**, as observações/ações RIP/ROP passam a ser obrigatórias.
+- **Nenhum campo é obrigatório** — dá para salvar parcial e completar depois.
+- A Revisão mostra o que está preenchido ou pendente, sem bloquear.
 - Excluir no dashboard apaga **ficha + inspeção** do dia (só dono ou gestor vê o botão).
 
 ## Acesso (login obrigatório)
@@ -28,6 +28,13 @@ Regras do conjunto:
 - Usuários criados manualmente em **Authentication > Users** no painel do Supabase.
 - Papel de cada um em `profiles`: `tecnico` (padrão) ou `gestor` (exclui/edita tudo).
 - No painel, em **Authentication > Configuration**: desligue "Confirm email" (uso interno) e cadastre `https://maasj1.github.io/ficha_de_opera-es/` em Site URL + Redirect Allow List.
+
+## Perfis: função, setor e preenchimento automático
+
+- `profiles` tem `funcao` (tecnico | fiel | chefe | gerente | outro) e `setor` (texto livre).
+- Tela `usuarios.html` (só gestor): define nome, função, setor e permissão de cada técnico.
+- Ao abrir um novo registro, os campos são preenchidos com o nome do logado conforme a função: técnico → campos de técnico; fiel → campo de fiel; chefe/gerente → assinaturas.
+- Fluxo: gestor cria o acesso → técnico entra uma vez (perfil aparece em Usuários) → gestor define função e setor.
 
 ## Como rodar
 
@@ -49,8 +56,9 @@ python -m http.server 8080
 ```
 sistema/
   index.html        → dashboard de registros diários conjuntos + busca + stats
-  registro.html     → wizard 4 etapas com validação por etapa + PDF
+  registro.html     → wizard 4 etapas + PDF (campos opcionais, autofill por função)
   login.html        → entrada por email/senha
+  usuarios.html     → gestão de perfis (só gestor)
   ficha.html        → edição avulsa pág.1
   inspecao.html     → edição avulsa pág.2–3
   css/styles.css    → tema claro/escuro + impressão (PDF sempre claro)
@@ -62,6 +70,7 @@ sistema/
   supabase/schema.sql       → tabelas + vínculo + RLS + índices
   supabase/migration_grupo.sql → migração para bancos antigos
   supabase/migration_rls_auth.sql → perfis + created_by + RLS dono/gestor
+  supabase/migration_profiles_funcao.sql → funcao/setor + gestão de perfis
 ```
 
 ## PDF final

@@ -200,6 +200,7 @@ async function loadEdit(){
   document.getElementById('saveStatus').innerHTML = 'Editando registro <b>' + editId + '</b>';
 }
 loadEdit();
+if(!editId) Auth.autofill(form).catch(() => {});
 
 form.onsubmit = async (e) => {
   e.preventDefault();
