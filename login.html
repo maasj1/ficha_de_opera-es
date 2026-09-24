@@ -4,44 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entrar — CODEBA Porto de Ilhéus</title>
-<link rel="stylesheet" href="css/styles.css?v=3">
+<link rel="stylesheet" href="css/styles.css?v=4">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="login-split">
-  <aside class="login-brand">
-    <img src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária">
-    <h1>Sistema de Operações</h1>
-    <p>Porto de Ilhéus — ficha de operações e inspeção em um único registro diário.</p>
-    <ul>
-      <li><b>✓</b> Preenchimento guiado em 4 etapas</li>
-      <li><b>✓</b> Checklist de 24 itens da inspeção</li>
-      <li><b>✓</b> PDF das 3 páginas para assinatura</li>
-    </ul>
-  </aside>
-  <main class="login-side">
-    <div class="login-card card">
-      <h2>Acesso do técnico</h2>
-      <p class="subtitle">Use o email completo cadastrado pelo gestor.</p>
-      <form id="formLogin">
-        <label class="field">Email cadastrado
-          <input type="email" name="email" autocomplete="username" placeholder="nome@codeba.gov.br" required>
-        </label>
-        <br>
-        <label class="field">Senha
-          <span class="pw-wrap">
-            <input type="password" name="senha" id="inputSenha" autocomplete="current-password" required>
-            <button type="button" class="pw-toggle" id="btnPw">Mostrar</button>
-          </span>
-        </label>
-        <div class="btn-row">
-          <button type="submit" class="btn btn-primary" id="btnLogin" style="flex:1;justify-content:center">Entrar</button>
-        </div>
-      </form>
-      <p class="subtitle" style="margin:12px 0 0">Sem acesso? Peça ao gestor para criar seu usuário.</p>
-    </div>
-  </main>
+<div class="login-centered">
+  <div class="login-card card">
+    <img class="doc-logo" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária">
+    <h2>Sistema de Operações</h2>
+    <p class="subtitle">Porto de Ilhéus — acesso do técnico</p>
+    <form id="formLogin">
+      <label class="field">Email cadastrado
+        <input type="email" name="email" autocomplete="username" placeholder="nome@codeba.gov.br" required>
+      </label>
+      <br>
+      <label class="field">Senha
+        <span class="pw-wrap">
+          <input type="password" name="senha" id="inputSenha" autocomplete="current-password" required>
+          <button type="button" class="pw-toggle" id="btnPw">Mostrar</button>
+        </span>
+      </label>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary" id="btnLogin" style="flex:1;justify-content:center">Entrar</button>
+      </div>
+    </form>
+    <p class="subtitle" style="margin:12px 0 0">Sem acesso? Peça ao gestor para criar seu usuário.</p>
+  </div>
+  <p class="login-foot">CODEBA · Gerência do Porto de Ilhéus — uso interno</p>
 </div>
 
 <script src="js/config.js"></script>
