@@ -90,14 +90,17 @@
       const papel = p?.papel === 'gestor' ? ' (gestor)' : '';
       box.style.display = '';
       box.innerHTML = '';
-      const span = document.createElement('span');
-      span.textContent = nome + funcao + papel;
+      const quem = document.createElement('a');
+      quem.href = 'perfil.html';
+      quem.className = 'link';
+      quem.style.color = '#fff';
+      quem.textContent = nome + funcao + papel;
       const sair = document.createElement('button');
       sair.type = 'button';
       sair.className = 'link like-btn';
       sair.textContent = 'Sair';
       sair.onclick = signOut;
-      box.appendChild(span);
+      box.appendChild(quem);
       box.appendChild(document.createTextNode(' · '));
       box.appendChild(sair);
     }

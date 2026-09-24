@@ -32,9 +32,10 @@ Regras do conjunto:
 ## Perfis: função, setor e preenchimento automático
 
 - `profiles` tem `funcao` (tecnico | fiel | chefe | gerente | outro) e `setor` (texto livre).
-- Tela `usuarios.html` (só gestor): define nome, função, setor e permissão de cada técnico.
+- No **primeiro login**, o técnico cai em `perfil.html` e preenche nome, função e setor sozinho.
+- Tela `usuarios.html` (só gestor, com modo bootstrap para o 1º gestor): corrige dados e permissões.
 - Ao abrir um novo registro, os campos são preenchidos com o nome do logado conforme a função: técnico → campos de técnico; fiel → campo de fiel; chefe/gerente → assinaturas.
-- Fluxo: gestor cria o acesso → técnico entra uma vez (perfil aparece em Usuários) → gestor define função e setor.
+- Fluxo: gestor cria o acesso → técnico entra e completa o perfil → (opcional) gestor ajusta em Usuários.
 
 ## Como rodar
 
@@ -49,6 +50,8 @@ python -m http.server 8080
 - Base nova: rode `supabase/schema.sql` no SQL Editor (cria `fichas_operacao` + `inspecoes` com `grupo_id`, `data_servico` e vínculo cruzado).
 - Base que já existia: rode `supabase/migration_grupo.sql` (adiciona as colunas e agrupa registros antigos).
 - Depois: rode `supabase/migration_rls_auth.sql` (perfis, `created_by` e RLS restrito: leitura = logado, escrita = dono ou gestor).
+- Depois: rode `supabase/migration_profiles_funcao.sql` (funcao/setor + gestão de perfis).
+- Depois: rode `supabase/migration_profiles_hardening.sql` (trava permissão: ninguém vira gestor sozinho; libera o 1º gestor).
 - A conexão (URL + key) fica em `js/config.js`, invisível na interface. Para trocar de projeto, edite esse arquivo.
 
 ## Estrutura
@@ -57,8 +60,9 @@ python -m http.server 8080
 sistema/
   index.html        → dashboard de registros diários conjuntos + busca + stats
   registro.html     → wizard 4 etapas + PDF (campos opcionais, autofill por função)
-  login.html        → entrada por email/senha
-  usuarios.html     → gestão de perfis (só gestor)
+  login.html        → entrada por email/senha (erros amigáveis, garante perfil)
+  perfil.html       → completar cadastro (nome, função, setor)
+  usuarios.html     → gestão de perfis (só gestor, com bootstrap do 1º)
   ficha.html        → edição avulsa pág.1
   inspecao.html     → edição avulsa pág.2–3
   css/styles.css    → tema claro/escuro + impressão (PDF sempre claro)
@@ -71,7 +75,10 @@ sistema/
   supabase/migration_grupo.sql → migração para bancos antigos
   supabase/migration_rls_auth.sql → perfis + created_by + RLS dono/gestor
   supabase/migration_profiles_funcao.sql → funcao/setor + gestão de perfis
+  supabase/migration_profiles_hardening.sql → trava escalação a gestor + bootstrap
 ```
+
+> CSS e JS têm versão (`?v=4`): ao mudar visual ou scripts, suba o número nos `<link>`/`<script>` das páginas para furar o cache.
 
 ## PDF final
 

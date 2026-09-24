@@ -26,18 +26,19 @@
   </div>
 
   <div class="card">
-    <p class="subtitle">Como funciona: o gestor cria o acesso em <b>Authentication &gt; Users</b> no painel do Supabase → o técnico entra uma vez (o perfil aparece aqui) → complete função e setor abaixo.</p>
+    <div class="alert" id="boot" style="display:none">Nenhum gestor ainda. Defina abaixo quem é o <b>primeiro gestor</b> (permissão Gestor) para liberar a gestão.</div>
+    <p class="subtitle">Como funciona: o gestor cria o acesso em <b>Authentication &gt; Users</b> no painel do Supabase → o técnico entra uma vez e completa o próprio perfil (nome, função, setor) → ajuste aqui se precisar.</p>
     <div id="lista"></div>
   </div>
 
   <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/theme.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/db.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/theme.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/db.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
 <script>Auth.require();</script>
 <script>
 const FUNCOES = [
@@ -55,17 +56,22 @@ function opt(list, val){
 }
 
 async function carregar(){
-  if(!(await Auth.isGestor())){
-    toast('Acesso restrito ao gestor.', 'err');
-    location.replace('index.html');
-    return;
-  }
   skeleton(document.getElementById('lista'), 3);
   try{
     const sb = DB.getClient();
     const { data, error } = await sb.from('profiles').select('*').order('nome', { ascending: true });
     if(error) throw error;
-    render(data || []);
+    const rows = data || [];
+    const anyGestor = rows.some(p => p.papel === 'gestor');
+    if(!(await Auth.isGestor()) && anyGestor){
+      toast('Acesso restrito ao gestor.', 'err');
+      location.replace('index.html');
+      return;
+    }
+    if(!anyGestor){
+      document.getElementById('boot').style.display = '';
+    }
+    render(rows);
   }catch(e){
     document.getElementById('lista').innerHTML = '<div class="alert">Erro ao carregar: ' + esc(e.message) + '</div>';
   }

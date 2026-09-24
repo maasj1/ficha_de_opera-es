@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu perfil — CODEBA Porto de Ilhéus</title>
+<link rel="stylesheet" href="css/styles.css?v=4">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>body{visibility:hidden}</style>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="back-link" href="index.html">← Início</a>
+  <div class="brand"><img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA"><span>Meu perfil<small>Dados do técnico</small></span></div>
+  <span class="user-box no-print" id="userBox" style="display:none"></span>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1 id="titulo">Complete seu cadastro</h1>
+      <p id="subtitulo">Sua função define quais campos o sistema preenche sozinho nos formulários.</p>
+    </div>
+  </div>
+
+  <div class="card" style="max-width:560px">
+    <label class="field">Nome completo <input id="f_nome" placeholder="Ex.: Artur Valente"></label>
+    <br>
+    <label class="field">Função
+      <select id="f_funcao">
+        <option value="">— Selecione —</option>
+        <option value="tecnico">Técnico de Operações (preenche campos de técnico)</option>
+        <option value="fiel">Fiel de Armazém (preenche campo de fiel)</option>
+        <option value="chefe">Chefe de Área (assinatura)</option>
+        <option value="gerente">Gerente do Porto (assinatura)</option>
+        <option value="outro">Outra função</option>
+      </select>
+    </label>
+    <br>
+    <label class="field">Setor <input id="f_setor" placeholder="Ex.: Operações, Armazém"></label>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnSalvar">Salvar e continuar</button>
+    </div>
+  </div>
+
+  <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
+</div>
+
+<script src="js/config.js?v=4"></script>
+<script src="js/theme.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/db.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script>Auth.require();</script>
+<script>
+(async function () {
+  const u = await Auth.user();
+  if (!u) return;
+  await Auth.ensureProfile();
+  const p = await Auth.profile();
+  if (p?.nome) document.getElementById('f_nome').value = p.nome;
+  if (p?.funcao) document.getElementById('f_funcao').value = p.funcao;
+  if (p?.setor) document.getElementById('f_setor').value = p.setor;
+  const forced = new URLSearchParams(location.search).get('novo') === '1';
+  if (!forced && p?.funcao) {
+    document.getElementById('titulo').textContent = 'Meu perfil';
+    document.getElementById('subtitulo').textContent = 'Atualize seus dados. Eles alimentam o preenchimento automático.';
+  }
+
+  document.getElementById('btnSalvar').onclick = async () => {
+    const nome = document.getElementById('f_nome').value.trim();
+    const funcao = document.getElementById('f_funcao').value || null;
+    const setor = document.getElementById('f_setor').value.trim() || null;
+    if (!nome) { toast('Informe seu nome completo.', 'err'); return; }
+    if (!funcao) { toast('Selecione sua função.', 'err'); return; }
+    try {
+      const sb = DB.getClient();
+      const { error } = await sb.from('profiles').update({ nome, funcao, setor }).eq('id', u.id);
+      if (error) throw error;
+      toast('Perfil salvo.', 'ok');
+      const next = new URLSearchParams(location.search).get('next') || 'index.html';
+      location.replace(next);
+    } catch (e) { toast('Erro ao salvar: ' + e.message, 'err'); }
+  };
+})();
+</script>
+</body>
+</html>

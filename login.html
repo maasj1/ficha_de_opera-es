@@ -34,11 +34,11 @@
   <p class="login-foot">CODEBA · Gerência do Porto de Ilhéus — uso interno</p>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/theme.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/db.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/theme.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/db.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
 <script>
 function friendlyError(err) {
   const msg = String((err && err.message) || err || '');
@@ -79,8 +79,13 @@ function friendlyError(err) {
         password: String(fd.get('senha'))
       });
       if (error) throw error;
-      try { await Auth.ensureProfile(); } catch (_) {}
-      location.replace(next);
+      let dest = next;
+      try {
+        await Auth.ensureProfile();
+        const p = await Auth.profile();
+        if (!p?.funcao) dest = 'perfil.html?novo=1&next=' + encodeURIComponent(next);
+      } catch (_) {}
+      location.replace(dest);
     } catch (err) {
       toast(friendlyError(err), 'err');
     } finally {
