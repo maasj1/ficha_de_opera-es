@@ -1193,6 +1193,10 @@ table.check tr.row-nao td { background: rgba(254,226,226,.45); }
   margin-bottom: 24px;
   flex-wrap: wrap;
 }
+/* Coluna estreita centralizada (ex.: Meu perfil) */
+.center-col { max-width: 600px; margin: 0 auto; }
+.page-head-center { justify-content: center; text-align: center; }
+.page-head-center p { margin-left: auto; margin-right: auto; }
 .page-head h1 {
   margin: 0;
   font-size: 24px;
