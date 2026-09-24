@@ -4,7 +4,7 @@ As **3 páginas** do documento oficial formam **um único registro do dia**:
 - **Pág. 1:** Ficha de Operações — Porto de Ilhéus
 - **Pág. 2–3:** Inspeção das Instalações e Operações Portuárias (24 itens)
 
-O técnico preenche tudo no mesmo dia. O sistema **só salva o conjunto completo** (ficha + inspeção vinculadas pelo mesmo `grupo_id`).
+O técnico preenche tudo no mesmo dia. Ficha + inspeção ficam vinculadas pelo mesmo `grupo_id`; campos vazios são permitidos e o registro pode ser completado depois.
 
 Sem build, sem Node. HTML + CSS + JS + Supabase (via CDN).
 

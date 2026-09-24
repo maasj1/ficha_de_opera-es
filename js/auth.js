@@ -27,8 +27,7 @@
     if (!sb || !u) return null;
     const { data } = await sb.from('profiles').select('id').eq('id', u.id).single();
     if (data) return data;
-    const nome = String(u.email || '').split('@')[0].replace(/[._-]+/g, ' ')
-      .replace(/\b\w/g, c => c.toUpperCase()) || null;
+    const nome = prettyName(u.email) === 'Técnico' ? null : prettyName(u.email);
     await sb.from('profiles').insert({ id: u.id, nome });
     return { id: u.id };
   }
@@ -75,13 +74,18 @@
     return u;
   }
 
+  // "artur.valente@codeba.gov.br" -> "Artur Valente" (quando não há perfil).
+  function prettyName(email) {
+    return String(email || '').split('@')[0].replace(/[._-]+/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase()) || 'Técnico';
+  }
   // Preenche #userBox (topbar) com nome + função + Sair.
-  // Gestor ganha link "Usuários" na navegação.
+  // Gestor ganha link "Usuários" (na nav, ou antes do tema se não houver nav).
   async function mountUser() {
     const box = document.getElementById('userBox');
     const [u, p] = await Promise.all([user(), profile()]);
     if (box && u) {
-      const nome = p?.nome || u.email || 'Técnico';
+      const nome = p?.nome || prettyName(u.email);
       const funcao = p?.funcao && FUNCAO_LABEL[p.funcao] ? ' · ' + FUNCAO_LABEL[p.funcao] : '';
       const papel = p?.papel === 'gestor' ? ' (gestor)' : '';
       box.style.display = '';
@@ -98,13 +102,19 @@
       box.appendChild(sair);
     }
     if (u && (await isGestorSafe(p))) {
+      const a = document.createElement('a');
+      a.href = 'usuarios.html';
+      a.textContent = 'Usuários';
+      a.setAttribute('data-nav-usuarios', '1');
       const nav = document.querySelector('header.topbar nav');
-      if (nav && !nav.querySelector('[data-nav-usuarios]')) {
-        const a = document.createElement('a');
-        a.href = 'usuarios.html';
-        a.textContent = 'Usuários';
-        a.setAttribute('data-nav-usuarios', '1');
-        nav.appendChild(a);
+      if (nav) {
+        if (!nav.querySelector('[data-nav-usuarios]')) nav.appendChild(a);
+      } else {
+        const toggle = document.querySelector('header.topbar .theme-toggle');
+        if (toggle && !document.querySelector('[data-nav-usuarios]')) {
+          a.className = 'back-link';
+          toggle.before(a);
+        }
       }
     }
   }
