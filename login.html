@@ -4,29 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Entrar — CODEBA Porto de Ilhéus</title>
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=3">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="container">
-  <div class="login-wrap">
-    <div class="card" style="text-align:center">
-      <img class="doc-logo" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária"><br>
-      <h2 style="margin:8px 0 4px">Sistema de Operações</h2>
-      <p class="subtitle">Porto de Ilhéus — acesso do técnico</p>
-      <form id="formLogin" style="text-align:left">
-        <label class="field">Email <input type="email" name="email" autocomplete="username" required></label>
+<div class="login-split">
+  <aside class="login-brand">
+    <img src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária">
+    <h1>Sistema de Operações</h1>
+    <p>Porto de Ilhéus — ficha de operações e inspeção em um único registro diário.</p>
+    <ul>
+      <li><b>✓</b> Preenchimento guiado em 4 etapas</li>
+      <li><b>✓</b> Checklist de 24 itens da inspeção</li>
+      <li><b>✓</b> PDF das 3 páginas para assinatura</li>
+    </ul>
+  </aside>
+  <main class="login-side">
+    <div class="login-card card">
+      <h2>Acesso do técnico</h2>
+      <p class="subtitle">Use o email completo cadastrado pelo gestor.</p>
+      <form id="formLogin">
+        <label class="field">Email cadastrado
+          <input type="email" name="email" autocomplete="username" placeholder="nome@codeba.gov.br" required>
+        </label>
         <br>
-        <label class="field">Senha <input type="password" name="senha" autocomplete="current-password" required></label>
+        <label class="field">Senha
+          <span class="pw-wrap">
+            <input type="password" name="senha" id="inputSenha" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle" id="btnPw">Mostrar</button>
+          </span>
+        </label>
         <div class="btn-row">
           <button type="submit" class="btn btn-primary" id="btnLogin" style="flex:1;justify-content:center">Entrar</button>
         </div>
       </form>
       <p class="subtitle" style="margin:12px 0 0">Sem acesso? Peça ao gestor para criar seu usuário.</p>
     </div>
-    <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
-  </div>
+  </main>
 </div>
 
 <script src="js/config.js"></script>
@@ -35,6 +50,17 @@
 <script src="js/db.js"></script>
 <script src="js/auth.js"></script>
 <script>
+function friendlyError(err) {
+  const msg = String((err && err.message) || err || '');
+  if (/invalid login credentials/i.test(msg))
+    return 'Email ou senha incorretos. Confira o email completo cadastrado (ex.: nome@codeba.gov.br) e tente de novo.';
+  if (/email not confirmed/i.test(msg))
+    return 'Email ainda não confirmado. Peça ao gestor para confirmar seu usuário no painel do Supabase.';
+  if (/failed to fetch|networkerror|load failed/i.test(msg))
+    return 'Sem conexão com o servidor. Verifique a internet e tente de novo.';
+  return 'Não foi possível entrar: ' + msg;
+}
+
 (async function () {
   const sb = DB.getClient();
   if (!sb) {
@@ -45,6 +71,13 @@
   const next = new URLSearchParams(location.search).get('next') || 'index.html';
   if (data?.session) { location.replace(next); return; }
 
+  const pw = document.getElementById('inputSenha');
+  document.getElementById('btnPw').onclick = () => {
+    const show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    document.getElementById('btnPw').textContent = show ? 'Ocultar' : 'Mostrar';
+  };
+
   document.getElementById('formLogin').onsubmit = async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnLogin');
@@ -52,13 +85,13 @@
     const fd = new FormData(e.target);
     try {
       const { error } = await sb.auth.signInWithPassword({
-        email: String(fd.get('email')).trim(),
+        email: String(fd.get('email')).trim().toLowerCase(),
         password: String(fd.get('senha'))
       });
       if (error) throw error;
       location.replace(next);
     } catch (err) {
-      toast('Não foi possível entrar: ' + err.message, 'err');
+      toast(friendlyError(err), 'err');
     } finally {
       btn.disabled = false; btn.textContent = 'Entrar';
     }
