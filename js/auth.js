@@ -74,7 +74,7 @@
     return u;
   }
 
-  // "artur.valente@codeba.gov.br" -> "Artur Valente" (quando não há perfil).
+  // "nome.sobrenome@codeba.gov.br" -> "Nome Sobrenome" (quando não há perfil).
   function prettyName(email) {
     return String(email || '').split('@')[0].replace(/[._-]+/g, ' ')
       .replace(/\b\w/g, c => c.toUpperCase()) || 'Técnico';
