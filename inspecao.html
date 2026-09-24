@@ -6,6 +6,7 @@
 <meta name="description" content="Inspeção das Instalações e Operações Portuárias — CODEBA Porto de Ilhéus.">
 <title>Inspeção Portuária — CODEBA</title>
 <link rel="stylesheet" href="css/styles.css">
+<style>body{visibility:hidden}</style>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -17,6 +18,7 @@
     <span>Inspeção Portuária<small>Fiscalização · Pág. 2–3</small></span>
   </div>
   <nav><a href="registro.html">Registro diário →</a></nav>
+  <span class="user-box no-print" id="userBox" style="display:none"></span>
   <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
 </header>
 
@@ -118,6 +120,8 @@
 <script src="js/theme.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script>Auth.require();</script>
 <script>
 const ITENS = [
   [1, "Foram providenciados rádios para comunicação bilateral em trabalhos com cargas içadas nas operações dos navios na faixa do cais?", "4/M"],
@@ -220,7 +224,10 @@ form.onsubmit = async (e) => {
   if(!row.data_servico) row.data_servico = row.data_inspecao || null;
   try{
     if(editId){ await DB.update('inspecoes', editId, row); toast('Inspeção atualizada! Complete o conjunto pelo registro diário.', 'ok'); }
-    else{ const saved = await DB.insert('inspecoes', row); toast('Inspeção salva!', 'ok'); location.search = '?id=' + saved.id; return; }
+    else{
+      const me = await Auth.user();
+      if(me) row.created_by = me.id;
+      const saved = await DB.insert('inspecoes', row); toast('Inspeção salva!', 'ok'); location.search = '?id=' + saved.id; return; }
   }catch(err){ toast('Erro ao salvar: ' + err.message, 'err'); }
   finally{ btn.disabled = false; btn.textContent = 'Salvar inspeção'; }
 };

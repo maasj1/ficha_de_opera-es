@@ -1,6 +1,6 @@
 // Configuração do Supabase (projeto ficha_de_operacao).
-// Valores padrão do projeto; a tela inicial pode sobrescrever via localStorage.
+// Fixa: a conexão é invisível na interface. Para trocar de projeto, edite aqui.
 window.APP_CONFIG = {
-  SUPABASE_URL: localStorage.getItem('sb_url') || 'https://yolihnlzmhjmzaukcyiz.supabase.co',
-  SUPABASE_ANON_KEY: localStorage.getItem('sb_key') || 'sb_publishable_bnKIhFON0bD5LC6nWaIcbQ_a5bcVJrc'
+  SUPABASE_URL: 'https://yolihnlzmhjmzaukcyiz.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_bnKIhFON0bD5LC6nWaIcbQ_a5bcVJrc'
 };

@@ -9,6 +9,8 @@
 
   function isOnline() { return !!sb; }
 
+  function getClient() { return sb; }
+
   // ---- fallback local ----
   function readLocal(key) {
     try { return JSON.parse(localStorage.getItem(key) || '[]'); }
@@ -76,5 +78,5 @@
     if (error) throw error;
   }
 
-  window.DB = { isOnline, insert, update, list, listBy, get, remove };
+  window.DB = { isOnline, getClient, insert, update, list, listBy, get, remove };
 })();
