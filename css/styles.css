@@ -138,7 +138,12 @@
 [data-theme="dark"] .sticky-actions { background: rgba(8,15,28,.92); }
 [data-theme="dark"] .alert { background: #2a1f0a; border-color: #7a5c14; color: #fde68a; }
 [data-theme="dark"] .brand .logo-img,
-[data-theme="dark"] .doc-logo { background: #fff; }
+[data-theme="dark"] .doc-logo {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 5px 12px;
+}
 [data-theme="dark"] .sub-title { color: #ddeeff; }
 [data-theme="dark"] .doc-header h1 { color: #f0f7ff; }
 [data-theme="dark"] .doc-header .doc-tag { color: #fbbf24; }
@@ -312,10 +317,9 @@ body::before {
 .doc-logo {
   height: 44px;
   width: auto;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 5px 12px;
+  background: none;
+  border: 0;
+  padding: 0;
   margin-bottom: 8px;
 }
 
@@ -1285,7 +1289,7 @@ input:focus-visible, .btn:focus-visible, a:focus-visible {
   .wsteps, .wizard-progress, .wizard-nav { display: none !important; }
   body { background: #fff !important; color: #000 !important; visibility: visible !important; }
   .container { max-width: 100%; padding: 0; }
-  .doc-logo { background: #fff !important; border: 1px solid #000; }
+  .doc-logo { background: none !important; border: 0; }
   .card, .hist-item, .local-block {
     background: #fff !important;
     color: #000 !important;
