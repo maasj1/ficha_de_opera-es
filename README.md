@@ -1,5 +1,9 @@
 # Sistema Portuário — Registro Diário Conjunto (Ficha + Inspeção)
 
+## Objetivo
+
+Facilitar a alimentação de dados e substituir a folha de papel: digitalizar a Ficha de Operações e a Inspeção do Porto de Ilhéus em um único registro diário, preenchido pelo técnico no sistema em vez de no papel.
+
 As **3 páginas** do documento oficial formam **um único registro do dia**:
 - **Pág. 1:** Ficha de Operações — Porto de Ilhéus
 - **Pág. 2–3:** Inspeção das Instalações e Operações Portuárias (24 itens)
