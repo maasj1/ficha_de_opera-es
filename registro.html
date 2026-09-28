@@ -246,36 +246,11 @@
 <script src="js/theme.js?v=4"></script>
 <script src="js/ui.js?v=4"></script>
 <script src="js/db.js?v=4"></script>
+<script src="js/itens.js?v=4"></script>
 <script src="js/auth.js?v=4"></script>
 <script>Auth.require();</script>
 <script>
 const LOCAIS = ['ARMAZÉM 01 SUL','ARMAZÉM 01 NORTE','ARMAZÉM 02','PÁTIO CARGA GERAL','PÁTIO I / ARMAZÉM 01','PÁTIO II / ARMAZÉM 02'];
-const ITENS = [
-  [1, "Foram providenciados rádios para comunicação bilateral em trabalhos com cargas içadas nas operações dos navios na faixa do cais?", "4/M"],
-  [2, "Alguma atracação/desatracação foi acompanhada? Foi observada a comunicação bilateral entre a Praticagem e Técnico de sistema, bem como uso adequado de EPI pelos trabalhadores de atracação?", "4/M"],
-  [3, "Os guindastes de terra em operação foram verificados pelos Operadores responsáveis?", "4/M"],
-  [4, "Os operadores de máquinas e equipamentos são cadastrados e habilitados para operação?", "4/M, 1/GR, 2/GR"],
-  [5, "Os talhadores portuários estão escalados para as operações?", "2/T"],
-  [6, "As escadas de acesso ao navio estão em condições de uso (conservação, limpeza, rede protetora, antiderrapante, corrimão, dispositivo rotativo, fora do raio da lança etc.)?", "4/T"],
-  [7, "Foi observada a proibição do uso de extensões elétricas fixadas em escada?", "4/M"],
-  [8, "Os equipamentos terrestres de guindar emitem sinais sonoros e luminosos durante o seu deslocamento?", "4/M"],
-  [9, "Há possibilidade de realização simultânea de atividades? Caso positivo, foi informada a proibição e paralisadas as operações?", "4/M"],
-  [10, "As instalações sanitárias da faixa do cais estão em bom estado de uso e higienização?", "3/L"],
-  [11, "Foram observadas inadequações nos resíduos oriundos de movimentação portuária?", "2, 1/G"],
-  [12, "Foi observado risco efetivo de contaminação ambiental em alguma operação/instalação?", "1/G, 2/G"],
-  [13, "Existem reparos em costados de navios atracados? Foram avisados e liberados pela Gerência?", "1/G"],
-  [14, "Existem latas de tintas ou outras substâncias à beira do cais que possam cair no mar?", "1/G"],
-  [15, "Foi registrado algum incidente/acidente nas instalações ou operações?", "4/M, 1/G, 2/G"],
-  [16, "As operações acompanhadas se realizam com regularidade, segurança, eficiência e eficácia?", "5/L, 1/M, 3/M, 4/M, 1/G, 6/T"],
-  [17, "Os veículos (carretas) das operações acompanhadas estão em boas condições de operação?", "4/M, 3/T, 4/T"],
-  [18, "Veículos e vagões de granéis sólidos estão cobertos/enlonados no trânsito e estacionamento?", "4/M, 5/T"],
-  [19, "Foi observado o uso de quadro posicionado nas operações de contêiner?", "4/M"],
-  [20, "Acessórios de içamento (anéis, manilhas, sapatilhas, cabos de aço) estão visivelmente em bom estado?", "4/M"],
-  [21, "Em líquidos/gases inflamáveis, cumprem-se NR-16 e NR-20?", "4/M"],
-  [22, "As vias estão livres para movimentação segura de passageiros de Cruzeiros/Transatlântico?", "4/M"],
-  [23, "As placas de comunicação com a ANTAQ estão visíveis e conservadas?", "2/L"],
-  [24, "Houve paralisação por risco grave e iminente?", "1/M"]
-];
 
 const form     = document.getElementById('formRegistro');
 const params   = new URLSearchParams(location.search);

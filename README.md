@@ -64,6 +64,7 @@ python -m http.server 8080
 sistema/
   index.html        → dashboard de registros diários conjuntos + busca + stats
   registro.html     → wizard 4 etapas + PDF (campos opcionais, autofill por função)
+  relatorios.html   → KPIs, gráficos, ranking de NÃO e exportação CSV
   login.html        → entrada por email/senha (erros amigáveis, garante perfil)
   perfil.html       → completar cadastro (nome, função, setor)
   usuarios.html     → gestão de perfis (só gestor, com bootstrap do 1º)
@@ -73,6 +74,7 @@ sistema/
   js/config.js      → URL/key do projeto (fixa, invisível na UI)
   js/db.js          → insert/update/list/listBy/get/remove (Supabase ou localStorage)
   js/auth.js        → sessão, guarda de rotas, usuário logado, gestor
+  js/itens.js       → texto oficial dos 24 itens + rótulos curtos (fonte única)
   js/theme.js       → modo claro/escuro
   js/ui.js          → toasts + skeletons
   supabase/schema.sql       → tabelas + vínculo + RLS + índices
@@ -87,3 +89,7 @@ sistema/
 ## PDF final
 
 Em `registro.html`, **PDF 3 páginas** imprime ficha + inspeção + revisão. Em `ficha.html`/`inspecao.html`, o PDF é só da página.
+
+## Relatórios gerenciais
+
+`relatorios.html` (qualquer logado): filtros por período/porto/busca, KPIs (registros, % completos, NÃO, conformidade), gráficos (NÃO por item, SIM/NÃO/N/A, NÃO por dia), ranking dos 24 itens e **exportação CSV** (separador `;`, abre direto no Excel). Gráficos via Chart.js (CDN).

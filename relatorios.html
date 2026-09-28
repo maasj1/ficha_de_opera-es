@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatórios — CODEBA Porto de Ilhéus</title>
+<link rel="stylesheet" href="css/styles.css?v=4">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>body{visibility:hidden}</style>
+</head>
+<body>
+<header class="topbar no-print">
+  <a class="back-link" href="index.html">← Início</a>
+  <div class="brand"><img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA"><span>Relatórios<small>Visão gerencial</small></span></div>
+  <span class="user-box no-print" id="userBox" style="display:none"></span>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+</header>
+
+<div class="container">
+  <div class="page-head">
+    <div>
+      <h1>Relatórios gerenciais</h1>
+      <p>Conformidade das inspeções, ranking de não-conformidades e exportação. Base: últimos 200 registros por tabela.</p>
+    </div>
+    <div class="btn-row no-print" style="margin-top:0">
+      <button class="btn btn-ghost" id="btnCsv">Exportar CSV</button>
+      <button class="btn btn-ghost" onclick="window.print()">Imprimir</button>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <div class="grid g4">
+      <label class="field">De <input type="date" id="f_de"></label>
+      <label class="field">Até <input type="date" id="f_ate"></label>
+      <label class="field">Porto
+        <select id="f_porto">
+          <option value="">Todos</option>
+          <option value="SALVADOR">Salvador</option>
+          <option value="ARATU">Aratu</option>
+          <option value="ILHEUS">Ilhéus</option>
+        </select>
+      </label>
+      <label class="field">Busca <input id="f_q" placeholder="Navio, técnico..."></label>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnFiltrar">Aplicar filtros</button>
+      <button class="btn btn-ghost" id="btnLimpar">Limpar</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="kReg">0</b><span>Registros no período</span></div>
+    <div class="stat"><b id="kComp">0%</b><span>Completos</span></div>
+    <div class="stat"><b id="kNao">0</b><span>Não-conformidades</span></div>
+    <div class="stat"><b id="kConf">—</b><span>Conformidade (SIM)</span></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">1</span> Não-conformidades por item</div>
+    <div style="position:relative;height:320px"><canvas id="chItens"></canvas></div>
+  </div>
+
+  <div class="grid g2">
+    <div class="card">
+      <div class="section-title"><span class="num">2</span> Respostas (SIM / NÃO / N/A)</div>
+      <div style="position:relative;height:260px"><canvas id="chResp"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="num">3</span> NÃO por dia</div>
+      <div style="position:relative;height:260px"><canvas id="chDias"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="num">4</span> Ranking de itens</div>
+    <div style="overflow-x:auto">
+    <table class="check">
+      <thead><tr><th style="width:52px">Nº</th><th>Item</th><th style="width:120px">Norma/Grau</th><th style="width:90px">NÃO</th><th style="width:110px">% das insp.</th></tr></thead>
+      <tbody id="rankBody"></tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
+</div>
+
+<script src="js/config.js?v=4"></script>
+<script src="js/theme.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/db.js?v=4"></script>
+<script src="js/itens.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script>Auth.require();</script>
+<script>
+let GRUPOS = [];
+let charts = {};
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function dataDe(g){
+  return g.ficha?.data_servico || g.insp?.data_servico
+    || g.ficha?.periodo_inicio || g.insp?.data_inspecao
+    || String(g.ficha?.created_at || g.insp?.created_at || '').slice(0, 10) || '';
+}
+
+async function carregar(){
+  try{
+    const [fichas, insps] = await Promise.all([DB.list('fichas_operacao'), DB.list('inspecoes')]);
+    const map = new Map();
+    fichas.forEach(f => {
+      const g = f.grupo_id || ('ficha:' + f.id);
+      if(!map.has(g)) map.set(g, { grupo: g, ficha: null, insp: null });
+      map.get(g).ficha = f;
+    });
+    insps.forEach(i => {
+      const g = i.grupo_id || ('insp:' + i.id);
+      if(!map.has(g)) map.set(g, { grupo: g, ficha: null, insp: null });
+      map.get(g).insp = i;
+    });
+    GRUPOS = [...map.values()];
+    const hoje = new Date();
+    const ini = new Date(); ini.setDate(hoje.getDate() - 29);
+    document.getElementById('f_de').value = ini.toISOString().slice(0, 10);
+    document.getElementById('f_ate').value = hoje.toISOString().slice(0, 10);
+    aplicar();
+  }catch(e){ toast('Erro ao carregar: ' + e.message, 'err'); }
+}
+
+function filtrados(){
+  const de = document.getElementById('f_de').value || '0000-00-00';
+  const ate = document.getElementById('f_ate').value || '9999-99-99';
+  const porto = document.getElementById('f_porto').value;
+  const q = (document.getElementById('f_q').value || '').toLowerCase();
+  return GRUPOS.filter(g => {
+    const d = dataDe(g);
+    if(d < de || d > ate) return false;
+    if(porto && g.insp?.porto !== porto) return false;
+    if(q && !JSON.stringify(g).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function palette(){
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return { tick: dark ? '#a8bad2' : '#5b6b82', grid: dark ? '#23406a' : '#e2e8f0' };
+}
+
+function agregar(rows){
+  const insps = rows.map(g => g.insp).filter(Boolean);
+  let sim = 0, nao = 0, na = 0;
+  const porItem = {}; for(let n = 1; n <= 24; n++) porItem[n] = 0;
+  const porDia = {};
+  insps.forEach(i => {
+    (i.itens || []).forEach(it => {
+      if(it.resposta === 'SIM') sim++;
+      else if(it.resposta === 'NAO'){ nao++; porItem[it.numero] = (porItem[it.numero] || 0) + 1; }
+      else if(it.resposta === 'N/A') na++;
+    });
+    const nDias = (i.itens || []).filter(x => x.resposta === 'NAO').length;
+    if(nDias){
+      const d = i.data_servico || i.data_inspecao || '';
+      porDia[d] = (porDia[d] || 0) + nDias;
+    }
+  });
+  return { insps, sim, nao, na, porItem, porDia };
+}
+
+function desenhar(rows){
+  const { insps, sim, nao, na, porItem, porDia } = agregar(rows);
+
+  // KPIs + ranking (funcionam mesmo sem o CDN de gráficos)
+  const comp = rows.filter(g => g.ficha && g.insp).length;
+  const resp = sim + nao + na;
+  document.getElementById('kReg').textContent = rows.length;
+  document.getElementById('kComp').textContent = rows.length ? Math.round(comp / rows.length * 100) + '%' : '—';
+  document.getElementById('kNao').textContent = nao;
+  document.getElementById('kConf').textContent = resp ? Math.round(sim / resp * 100) + '%' : '—';
+
+  const nInsp = insps.length || 1;
+  const rank = Object.keys(porItem)
+    .map(n => ({ n: +n, nao: porItem[n] }))
+    .sort((a, b) => b.nao - a.nao);
+  document.getElementById('rankBody').innerHTML = rank.map(r => {
+    const meta = (window.ITENS.find(x => x[0] === r.n) || []);
+    return `<tr><td><span class="num-circle">${r.n}</span></td>
+      <td>${esc(window.ITENS_CURTO[r.n] || '')}<br><small style="color:var(--muted)">${esc(meta[1] || '')}</small></td>
+      <td><span class="badge badge-gray">${esc(meta[2] || '')}</span></td>
+      <td><b>${r.nao}</b></td>
+      <td>${Math.round(r.nao / nInsp * 100)}%</td></tr>`;
+  }).join('');
+
+  if(!window.Chart){ toast('Gráficos indisponíveis (CDN Chart.js).', 'err'); return; }
+  Object.values(charts).forEach(c => { try{ c.destroy(); }catch(_){} });
+  charts = {};
+  const pal = palette();
+  Chart.defaults.color = pal.tick;
+  Chart.defaults.borderColor = pal.grid;
+  Chart.defaults.font.family = 'Inter, Segoe UI, Arial, sans-serif';
+
+  const base = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+
+  charts.itens = new Chart(document.getElementById('chItens'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(porItem).map(n => n + ' · ' + (window.ITENS_CURTO[n] || '')),
+      datasets: [{ data: Object.values(porItem), backgroundColor: '#d9a441', borderRadius: 4 }]
+    },
+    options: { ...base, indexAxis: 'y', scales: { x: { ticks: { precision: 0 } } } }
+  });
+
+  charts.resp = new Chart(document.getElementById('chResp'), {
+    type: 'doughnut',
+    data: {
+      labels: ['SIM', 'NÃO', 'N/A'],
+      datasets: [{ data: [sim, nao, na], backgroundColor: ['#16a34a', '#b91c1c', '#64748b'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const dias = Object.keys(porDia).sort();
+  charts.dias = new Chart(document.getElementById('chDias'), {
+    type: 'line',
+    data: {
+      labels: dias,
+      datasets: [{ data: dias.map(d => porDia[d]), borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,.15)', fill: true, tension: .3 }]
+    },
+    options: { ...base, scales: { y: { ticks: { precision: 0 } } } }
+  });
+}
+
+function aplicar(){ desenhar(filtrados()); }
+
+function csvCell(v){
+  v = String(v ?? '');
+  return '"' + v.replace(/"/g, '""') + '"';
+}
+function exportarCsv(){
+  const rows = filtrados();
+  const head = ['data_servico','porto','tecnico','fiel','periodo','berco01_navio','berco02_navio',
+    'item_numero','item','norma','resposta','observacoes_acoes'];
+  const lines = [head.join(';')];
+  rows.forEach(g => {
+    const f = g.ficha || {}, i = g.insp || {};
+    const base = [f.data_servico || i.data_servico || '', i.porto || '',
+      f.tecnico_operacoes || i.tecnico_nome || '', f.fiel_armazem || '',
+      (f.periodo_inicio || '') + ' a ' + (f.periodo_fim || ''),
+      f.berco01_nome || '', f.berco02_nome || ''];
+    const itens = (i.itens && i.itens.length ? i.itens : [{ numero: '', resposta: '' }]);
+    itens.forEach(it => {
+      const meta = window.ITENS.find(x => x[0] === it.numero) || [];
+      lines.push([...base.map(csvCell),
+        csvCell(it.numero), csvCell(window.ITENS_CURTO[it.numero] || ''),
+        csvCell(meta[2] || ''), csvCell(it.resposta), csvCell(i.observacoes_acoes || '')].join(';'));
+    });
+  });
+  const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'relatorio-codeba-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast('CSV exportado.', 'ok');
+}
+
+document.getElementById('btnFiltrar').onclick = aplicar;
+document.getElementById('f_q').oninput = aplicar;
+document.getElementById('btnLimpar').onclick = () => {
+  document.getElementById('f_de').value = '';
+  document.getElementById('f_ate').value = '';
+  document.getElementById('f_porto').value = '';
+  document.getElementById('f_q').value = '';
+  aplicar();
+};
+document.getElementById('btnCsv').onclick = exportarCsv;
+carregar();
+</script>
+</body>
+</html>
