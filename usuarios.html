@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Usuários — CODEBA Porto de Ilhéus</title>
-<link rel="stylesheet" href="css/styles.css?v=7">
+<link rel="stylesheet" href="css/styles.css?v=8">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>body{visibility:hidden}</style>
@@ -13,8 +13,10 @@
 <header class="topbar no-print">
   <a class="back-link" href="index.html">← Início</a>
   <div class="brand"><img class="logo-img" src="assets/logo-codeba.png" alt="CODEBA"><span>Usuários<small>Gestão de perfis</small></span></div>
-  <span class="user-box no-print" id="userBox" style="display:none"></span>
-  <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+  <div class="topbar-right no-print">
+    <span class="user-box no-print" id="userBox" style="display:none"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+  </div>
 </header>
 
 <div class="container">

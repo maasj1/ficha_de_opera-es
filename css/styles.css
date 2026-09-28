@@ -963,7 +963,7 @@ table.check tr.row-nao td { background: rgba(254,226,226,.45); }
   display: block;
   height: 100%;
   width: 25%;
-  background: linear-gradient(90deg, var(--accent), var(--gold-500));
+  background: var(--accent);
   border-radius: 999px;
   transition: width .4s cubic-bezier(.4,0,.2,1);
 }
@@ -1046,13 +1046,18 @@ table.check tr.row-nao td { background: rgba(254,226,226,.45); }
    LOGIN / USUÁRIO LOGADO / GUARDA DE ROTA
    ============================================================ */
 .login-wrap { max-width: 420px; margin: 7vh auto 0; }
+/* Grupo direito da topbar: usuário + tema sempre juntos e alinhados */
+.topbar-right {
+  margin-left: auto; flex-shrink: 0; min-width: 0;
+  display: flex; align-items: center; gap: 8px;
+}
 .user-box {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap;
   background: rgba(255, 255, 255, .10);
   border: 1px solid rgba(255, 255, 255, .18);
   padding: 7px 14px; border-radius: 999px;
-  margin-left: auto; flex-shrink: 0; min-width: 0;
+  flex-shrink: 1; min-width: 0; max-width: 100%;
 }
 .user-box .link { color: #fff; }
 .user-box a.link:first-child {
@@ -1061,6 +1066,11 @@ table.check tr.row-nao td { background: rgba(254,226,226,.45); }
 }
 .user-box .like-btn { opacity: .85; }
 .user-box .like-btn:hover { opacity: 1; text-decoration: underline; }
+.topbar-right .theme-toggle { margin-left: 0; }
+@media (max-width: 760px) {
+  .topbar-right { margin-left: auto; max-width: 100%; }
+  .topbar-right .theme-toggle { margin-left: 0; }
+}
 
 /* ---------- Login centralizado ---------- */
 .login-centered {
