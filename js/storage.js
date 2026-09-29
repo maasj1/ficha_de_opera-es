@@ -31,23 +31,42 @@
       'image/jpeg', QUALITY));
   }
 
+  // Traduz erros do Storage em mensagens acionáveis.
+  function friendlyStorageError(error, acao) {
+    const msg = String((error && (error.message || error.error)) || error || '');
+    if (/NoSuchBucket|Bucket not found/i.test(msg))
+      return new Error("Bucket 'evidencias' não existe. Rode a migration supabase/migration_evidencias_assinaturas.sql no SQL Editor.");
+    if (/row-level security|RLS|not authorized|unauthorized|permission/i.test(msg))
+      return new Error('Sem permissão no Storage. Confira as policies do bucket e se você está logado.');
+    if (/too large|too_large|payload|entity/i.test(msg))
+      return new Error('Foto muito grande para enviar.');
+    if (/Duplicate|already exists/i.test(msg) && acao === 'upload')
+      return new Error('DUPLICATE_RETRY');
+    return error instanceof Error ? error : new Error(msg || 'Falha no Storage.');
+  }
+
   async function upload(grupoId, itemN, file) {
     const sb = client();
     if (!sb) throw new Error('Sem conexão.');
     const blob = await compress(file);
-    const path = grupoId + '/item' + itemN + '_' + Date.now() + '.jpg';
-    const { error } = await sb.storage.from(BUCKET).upload(path, blob, {
-      contentType: 'image/jpeg', upsert: false
-    });
-    if (error) throw error;
-    return path;
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      const path = grupoId + '/item' + itemN + '_' + Date.now() + '.jpg';
+      const { error } = await sb.storage.from(BUCKET).upload(path, blob, {
+        contentType: 'image/jpeg', upsert: false
+      });
+      if (!error) return path;
+      const friendly = friendlyStorageError(error, 'upload');
+      if (String(friendly.message) === 'DUPLICATE_RETRY') continue;
+      throw friendly;
+    }
+    throw new Error('Não foi possível enviar. Tente de novo.');
   }
 
   async function remove(paths) {
     const sb = client();
     if (!sb || !paths || !paths.length) return;
     const { error } = await sb.storage.from(BUCKET).remove(paths);
-    if (error) throw error;
+    if (error) throw friendlyStorageError(error, 'remove');
   }
 
   window.Fotos = { upload, remove, publicUrl, MAX_POR_ITEM };

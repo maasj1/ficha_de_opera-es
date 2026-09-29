@@ -243,7 +243,7 @@
 <script src="js/ui.js?v=4"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/itens.js?v=4"></script>
-<script src="js/storage.js?v=5"></script>
+<script src="js/storage.js?v=6"></script>
 <script src="js/auth.js?v=4"></script>
 <script>Auth.require();</script>
 <script>
@@ -292,11 +292,15 @@ function renderFotos(n){
   if(!box) return;
   const arr = FOTOS[n] || [];
   box.innerHTML =
-    arr.map((p, idx) => `<span class="thumb"><img src="${Fotos.publicUrl(p)}" alt="Evidência item ${n}" loading="lazy"><button type="button" data-foto-del="${n}:${idx}" title="Remover foto">×</button></span>`).join('')
+    arr.map((p, idx) => `<span class="thumb"><img src="${Fotos.publicUrl(p)}" alt="Evidência item ${n}" loading="lazy" onerror="this.closest('.thumb').style.opacity=.35" title="Foto pode não ter sido enviada"><button type="button" data-foto-del="${n}:${idx}" title="Remover foto">×</button></span>`).join('')
     + (arr.length < Fotos.MAX_POR_ITEM
       ? `<label class="foto-add">+ Foto<input type="file" accept="image/*" capture="environment" data-foto-add="${n}" hidden></label>`
       : `<span class="badge badge-gray">${arr.length}/${Fotos.MAX_POR_ITEM}</span>`);
-  box.querySelectorAll('[data-foto-add]').forEach(inp => inp.onchange = () => addFoto(n, inp.files[0]));
+  box.querySelectorAll('[data-foto-add]').forEach(inp => inp.onchange = () => {
+    const f = inp.files[0];
+    inp.value = '';
+    addFoto(n, f);
+  });
   box.querySelectorAll('[data-foto-del]').forEach(btn => btn.onclick = () => delFoto(n, +btn.dataset.fotoDel.split(':')[1]));
 }
 async function addFoto(n, file){
