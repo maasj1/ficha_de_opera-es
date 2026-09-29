@@ -31,7 +31,9 @@ Regras do conjunto:
 - Entrada por `login.html` (email + senha). Sem sessão, nenhuma página abre.
 - Usuários criados manualmente em **Authentication > Users** no painel do Supabase.
 - Papel de cada um em `profiles`: `tecnico` (padrão) ou `gestor` (exclui/edita tudo).
-- No painel, em **Authentication > Configuration**: desligue "Confirm email" (uso interno) e cadastre `https://maasj1.github.io/ficha_de_opera-es/` em Site URL + Redirect Allow List.
+- No painel, em **Authentication > Configuration**: desligue "Confirm email" (uso interno) e cadastre `https://maasj1.github.io/ficha_de_opera-es/` em Site URL + Redirect Allow List (inclua também `.../redefinir.html`).
+- **Trocar senha**: tela `perfil.html`. **Esqueci a senha**: link no login envia email → `redefinir.html` define a nova (verifique spam; remetente padrão do Supabase).
+- **Ativar/desativar**: `usuarios.html` (gestor), sem auto-desativação. Desativado perde UI e API (policies exigem `is_ativo()`).
 
 ## Perfis: função, setor e preenchimento automático
 
@@ -65,9 +67,10 @@ sistema/
   index.html        → dashboard de registros diários conjuntos + busca + stats
   registro.html     → wizard 4 etapas + PDF (campos opcionais, autofill por função)
   relatorios.html   → KPIs, gráficos, ranking de NÃO e exportação CSV
-  login.html        → entrada por email/senha (erros amigáveis, garante perfil)
-  perfil.html       → completar cadastro (nome, função, setor)
+  login.html        → entrada por email/senha (erros amigáveis, garante perfil, recupera senha)
+  perfil.html       → completar cadastro (nome, função, setor) + trocar senha
   usuarios.html     → gestão de perfis (só gestor, com bootstrap do 1º)
+  redefinir.html    → define nova senha pelo link do email
   ficha.html        → edição avulsa pág.1
   inspecao.html     → edição avulsa pág.2–3
   css/styles.css    → tema claro/escuro + impressão (PDF sempre claro)
@@ -85,6 +88,7 @@ sistema/
   supabase/migration_profiles_funcao.sql → funcao/setor + gestão de perfis
   supabase/migration_profiles_hardening.sql → trava escalação a gestor + bootstrap
   supabase/migration_evidencias_assinaturas.sql → bucket `evidencias` + coluna `assinaturas`
+  supabase/migration_gestao_acessos.sql → coluna `ativo` + `is_ativo()` nas policies + trava
 ```
 
 > CSS e JS têm versão (`?v=4`): ao mudar visual ou scripts, suba o número nos `<link>`/`<script>` das páginas para furar o cache.

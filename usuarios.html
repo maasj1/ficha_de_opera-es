@@ -86,15 +86,19 @@ function render(rows){
     return;
   }
   box.innerHTML = rows.map(p => `
-    <div class="hist-item" data-id="${esc(p.id)}">
+    <div class="hist-item" data-id="${esc(p.id)}" ${p.ativo === false ? 'style="opacity:.65"' : ''}>
       <div style="flex:1;display:grid;gap:10px">
         <div class="grid g2">
           <label class="field">Nome <input data-f="nome" value="${esc(p.nome || '')}" placeholder="Nome completo"></label>
           <label class="field">Setor <input data-f="setor" value="${esc(p.setor || '')}" placeholder="Ex.: Operações, Armazém"></label>
         </div>
-        <div class="grid g2">
+        <div class="grid g3">
           <label class="field">Função <select data-f="funcao">${opt(FUNCOES, p.funcao)}</select></label>
           <label class="field">Permissão <select data-f="papel">${opt([['tecnico', 'Técnico'], ['gestor', 'Gestor']], p.papel)}</select></label>
+          <label class="field">Acesso <select data-f="ativo" data-bool="1">
+            <option value="true"${p.ativo !== false ? ' selected' : ''}>Ativo</option>
+            <option value="false"${p.ativo === false ? ' selected' : ''}>Desativado</option>
+          </select></label>
         </div>
         <small style="color:var(--muted)">${esc(String(p.id).slice(0, 8))}…</small>
       </div>
@@ -107,7 +111,16 @@ function render(rows){
 async function salvar(id, btn){
   const card = document.querySelector(`.hist-item[data-id="${id}"]`);
   const row = {};
-  card.querySelectorAll('[data-f]').forEach(el => { row[el.dataset.f] = el.value === '' ? null : el.value; });
+  card.querySelectorAll('[data-f]').forEach(el => {
+    let v = el.value === '' ? null : el.value;
+    if (el.dataset.bool) v = (v === 'true');
+    row[el.dataset.f] = v;
+  });
+  const me = await Auth.user();
+  if (me && me.id === id && row.ativo === false) {
+    toast('Você não pode desativar seu próprio acesso.', 'err');
+    return;
+  }
   btn.disabled = true;
   try{
     const sb = DB.getClient();

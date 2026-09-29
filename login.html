@@ -29,7 +29,15 @@
         <button type="submit" class="btn btn-primary" id="btnLogin" style="flex:1;justify-content:center">Entrar</button>
       </div>
     </form>
-    <p class="subtitle" style="margin:12px 0 0">Sem acesso? Peça ao gestor para criar seu usuário.</p>
+    <p class="subtitle" style="margin:12px 0 0">Sem acesso? Peça ao gestor para criar seu usuário.<br><button type="button" class="link like-btn" id="btnEsqueci">Esqueci a senha</button></p>
+    <div id="recBox" style="display:none;text-align:left;margin-top:12px">
+      <label class="field">Email cadastrado
+        <input type="email" id="recEmail" placeholder="nome@codeba.gov.br">
+      </label>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" id="btnRec" style="flex:1;justify-content:center">Enviar link</button>
+      </div>
+    </div>
   </div>
   <p class="login-foot">CODEBA · Gerência do Porto de Ilhéus — uso interno</p>
 </div>
@@ -60,12 +68,32 @@ function friendlyError(err) {
   const { data } = await sb.auth.getSession();
   const next = new URLSearchParams(location.search).get('next') || 'index.html';
   if (data?.session) { location.replace(next); return; }
+  if (new URLSearchParams(location.search).get('motivo') === 'desativado') {
+    toast('Acesso desativado. Fale com o gestor.', 'err');
+  }
 
   const pw = document.getElementById('inputSenha');
   document.getElementById('btnPw').onclick = () => {
     const show = pw.type === 'password';
     pw.type = show ? 'text' : 'password';
     document.getElementById('btnPw').textContent = show ? 'Ocultar' : 'Mostrar';
+  };
+
+  document.getElementById('btnEsqueci').onclick = () => {
+    const box = document.getElementById('recBox');
+    box.style.display = box.style.display === 'none' ? '' : 'none';
+    const em = document.querySelector('#formLogin [name="email"]').value;
+    if (em) document.getElementById('recEmail').value = em;
+  };
+  document.getElementById('btnRec').onclick = async () => {
+    const email = document.getElementById('recEmail').value.trim().toLowerCase();
+    if (!email) { toast('Informe o email cadastrado.', 'err'); return; }
+    try {
+      const redirectTo = location.href.split('login.html')[0] + 'redefinir.html';
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) throw error;
+      toast('Link enviado. Confira seu email (inclusive spam).', 'ok');
+    } catch (err) { toast(friendlyError(err), 'err'); }
   };
 
   document.getElementById('formLogin').onsubmit = async (e) => {
@@ -83,6 +111,11 @@ function friendlyError(err) {
       try {
         await Auth.ensureProfile();
         const p = await Auth.profile();
+        if (p && p.ativo === false) {
+          await sb.auth.signOut();
+          toast('Acesso desativado. Fale com o gestor.', 'err');
+          return;
+        }
         if (!p?.funcao) dest = 'perfil.html?novo=1&next=' + encodeURIComponent(next);
       } catch (_) {}
       location.replace(dest);

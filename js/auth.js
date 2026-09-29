@@ -16,7 +16,7 @@
     const sb = client();
     const u = await user();
     if (!sb || !u) return null;
-    const { data } = await sb.from('profiles').select('nome, papel, funcao, setor').eq('id', u.id).single();
+    const { data } = await sb.from('profiles').select('nome, papel, funcao, setor, ativo').eq('id', u.id).single();
     return data || null;
   }
 
@@ -61,12 +61,23 @@
     return p?.papel === 'gestor';
   }
 
-  // Bloqueia a página sem sessão: revela o body só se logado.
+  // Bloqueia sem sessão e sem perfil ativo: revela o body só se liberado.
   async function require() {
     const u = await user();
     if (!u) {
       const next = encodeURIComponent(location.pathname.split('/').pop() + location.search);
       location.replace('login.html?next=' + next);
+      return null;
+    }
+    let ativo = true;
+    try {
+      const sb = client();
+      const { data } = await sb.from('profiles').select('ativo').eq('id', u.id).single();
+      if (data) ativo = data.ativo !== false;
+    } catch (_) {}
+    if (!ativo) {
+      if (client()) await client().auth.signOut();
+      location.replace('login.html?motivo=desativado');
       return null;
     }
     document.body.style.visibility = 'visible';

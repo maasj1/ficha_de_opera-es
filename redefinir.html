@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redefinir senha — CODEBA Porto de Ilhéus</title>
+<link rel="stylesheet" href="css/styles.css?v=4">
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="login-centered">
+  <div class="login-card card">
+    <img class="doc-logo" src="assets/logo-codeba.png" alt="CODEBA — Autoridade Portuária">
+    <h2>Redefinir senha</h2>
+    <p class="subtitle" id="recMsg">Validando link…</p>
+    <form id="formRec" style="display:none">
+      <label class="field">Nova senha (mín. 6 caracteres)
+        <input type="password" id="recSenha1" autocomplete="new-password" required>
+      </label>
+      <br>
+      <label class="field">Confirmar nova senha
+        <input type="password" id="recSenha2" autocomplete="new-password" required>
+      </label>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary" id="btnRecSalvar" style="flex:1;justify-content:center">Salvar nova senha</button>
+      </div>
+    </form>
+  </div>
+  <p class="login-foot">CODEBA · Gerência do Porto de Ilhéus — uso interno</p>
+</div>
+
+<script src="js/config.js?v=4"></script>
+<script src="js/theme.js?v=4"></script>
+<script src="js/ui.js?v=4"></script>
+<script src="js/db.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script>
+(async function () {
+  const sb = DB.getClient();
+  if (!sb) { document.getElementById('recMsg').textContent = 'Falha de conexão. Recarregue.'; return; }
+  // O supabase-js lê o token do link automaticamente (detectSessionInUrl).
+  await new Promise(r => setTimeout(r, 800));
+  const { data } = await sb.auth.getSession();
+  if (!data?.session) {
+    document.getElementById('recMsg').textContent = 'Link inválido ou expirado. Peça um novo em "Esqueci a senha".';
+    return;
+  }
+  document.getElementById('recMsg').textContent = 'Link válido. Defina sua nova senha.';
+  document.getElementById('formRec').style.display = '';
+  document.getElementById('formRec').onsubmit = async (e) => {
+    e.preventDefault();
+    const s1 = document.getElementById('recSenha1').value;
+    const s2 = document.getElementById('recSenha2').value;
+    if (s1.length < 6) { toast('Mínimo de 6 caracteres.', 'err'); return; }
+    if (s1 !== s2) { toast('As senhas não conferem.', 'err'); return; }
+    const btn = document.getElementById('btnRecSalvar');
+    btn.disabled = true;
+    try {
+      const { error } = await sb.auth.updateUser({ password: s1 });
+      if (error) throw error;
+      toast('Senha redefinida. Entre com a nova senha.', 'ok');
+      await sb.auth.signOut();
+      setTimeout(() => location.replace('login.html'), 1200);
+    } catch (err) { toast('Erro: ' + err.message, 'err'); }
+    finally { btn.disabled = false; }
+  };
+})();
+</script>
+</body>
+</html>
