@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Inspeção das Instalações e Operações Portuárias — CODEBA Porto de Ilhéus.">
 <title>Inspeção Portuária — CODEBA</title>
-<link rel="stylesheet" href="css/styles.css?v=8">
+<link rel="stylesheet" href="css/styles.css?v=9">
 <style>body{visibility:hidden}</style>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -177,12 +177,16 @@ function fill(name, val){
   });
 }
 
+let EDIT_FOTOS = {}; // preserva evidências salvas pelo registro diário
 async function loadEdit(){
   if(!editId) return;
   const r = await DB.get('inspecoes', editId);
   if(!r) return;
   Object.keys(r).forEach(k => { if(!k.startsWith('item_')) fill(k, r[k]); });
-  (r.itens || []).forEach(it => fill('item_' + it.numero, it.resposta));
+  (r.itens || []).forEach(it => {
+    fill('item_' + it.numero, it.resposta);
+    if(it.fotos && it.fotos.length) EDIT_FOTOS[it.numero] = [...it.fotos];
+  });
   atualizarContador();
   document.getElementById('saveStatus').textContent = 'Editando registro ' + editId;
 }
@@ -197,7 +201,7 @@ form.onsubmit = async (e) => {
   const fd  = new FormData(form);
   const row = {};
   for(const [k,v] of fd.entries()) row[k] = (v === '' ? null : v);
-  row.itens = ITENS.map(([n]) => ({ numero: n, resposta: row[`item_${n}`] || null }));
+  row.itens = ITENS.map(([n]) => ({ numero: n, resposta: row[`item_${n}`] || null, fotos: EDIT_FOTOS[n] || [] }));
   ITENS.forEach(([n]) => delete row[`item_${n}`]);
   if(!row.data_servico) row.data_servico = row.data_inspecao || null;
   try{

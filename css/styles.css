@@ -837,6 +837,37 @@ table.check tr.row-nao td { background: rgba(254,226,226,.45); }
   border: 1px solid var(--border);
 }
 
+/* ---------- Evidências fotográficas ---------- */
+.foto-ctrl { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+.foto-add {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700; color: var(--accent);
+  border: 1px dashed var(--border-strong); border-radius: 8px; padding: 5px 10px;
+  cursor: pointer; background: transparent;
+}
+.foto-add:hover { border-color: var(--accent); }
+.thumb { position: relative; display: inline-block; line-height: 0; }
+.thumb img {
+  width: 56px; height: 56px; object-fit: cover;
+  border-radius: 8px; border: 1px solid var(--border);
+}
+.thumb button {
+  position: absolute; top: -7px; right: -7px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card); color: var(--bad);
+  font-size: 13px; font-weight: 700; line-height: 1; cursor: pointer; padding: 0;
+}
+
+/* ---------- Assinaturas digitais ---------- */
+.sig-block {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  margin-bottom: 10px; background: transparent;
+}
+.sig-block small { color: var(--muted); }
+.sig-block.signed { border-color: var(--ok); }
+.sig-block.signed small { color: var(--ok); }
+
 /* ============================================================
    PROGRESSO
    ============================================================ */
@@ -1297,6 +1328,9 @@ input:focus-visible, .btn:focus-visible, a:focus-visible {
   .theme-toggle, body::before { display: none !important; }
   .wstep { display: block !important; }
   .wsteps, .wizard-progress, .wizard-nav { display: none !important; }
+  .foto-add, .thumb button, .sig-block .hist-actions { display: none !important; }
+  .thumb img { width: 96px; height: 96px; }
+  .sig-block { border: 1px solid #000; }
   body { background: #fff !important; color: #000 !important; visibility: visible !important; }
   .container { max-width: 100%; padding: 0; }
   .doc-logo { background: none !important; border: 0; }

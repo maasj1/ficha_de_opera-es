@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Novo registro diário de operações portuárias — CODEBA Porto de Ilhéus.">
 <title>Novo registro diário — CODEBA</title>
-<link rel="stylesheet" href="css/styles.css?v=8">
+<link rel="stylesheet" href="css/styles.css?v=9">
 <style>body{visibility:hidden}</style>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -167,10 +167,9 @@
   <section class="wstep" data-step="2">
   <div class="card">
     <div class="section-title"><span class="num">3</span> Inspeção</div>
-    <div class="grid g3">
+    <div class="grid g2">
       <label class="field">Data da inspeção <input type="date" name="data_inspecao"></label>
       <label class="field">Hora <input type="time" name="hora_operacoes"></label>
-      <label class="field">Técnico (assinatura) <input name="tecnico_nome"></label>
     </div>
     <div class="divider"></div>
     <div class="grid g2">
@@ -207,14 +206,9 @@
       <textarea name="observacoes_acoes" rows="5" placeholder="Ex.: Item 06 — NÃO — escada sem rede. Ação: ROP..."></textarea>
     </label>
     <div class="divider"></div>
-    <div class="grid g3">
-      <label class="field">Técnico — data <input type="date" name="tecnico_data"></label>
-      <label class="field">Chefe de área — nome <input name="chefe_nome"></label>
-      <label class="field">Chefe de área — data <input type="date" name="chefe_data"></label>
-      <label class="field">Gerente do porto — nome <input name="gerente_nome"></label>
-      <label class="field">Gerente do porto — data <input type="date" name="gerente_data"></label>
-      <span></span>
-    </div>
+    <div class="sub-title">Assinaturas digitais</div>
+    <p class="subtitle">Cada responsável assina com a própria conta — registra nome, email, data e hora. Sem caneta.</p>
+    <div id="assinaturas"></div>
   </div>
   </section>
 
@@ -249,6 +243,7 @@
 <script src="js/ui.js?v=4"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/itens.js?v=4"></script>
+<script src="js/storage.js?v=5"></script>
 <script src="js/auth.js?v=4"></script>
 <script>Auth.require();</script>
 <script>
@@ -284,7 +279,69 @@ tbody.innerHTML = ITENS.map(([n, texto, norma]) => `
     <label><input type="radio" name="item_${n}" value="SIM"> SIM</label>
     <label><input type="radio" name="item_${n}" value="NAO"> NÃO</label>
     <label><input type="radio" name="item_${n}" value="N/A"> N/A</label>
-  </div></td></tr>`).join('');
+  </div><div class="foto-ctrl" id="fotos-${n}"></div></td></tr>`).join('');
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtDH(iso){ try{ return new Date(iso).toLocaleString('pt-BR'); }catch{ return iso || ''; } }
+
+// ---------- Evidências fotográficas por item (máx. 3) ----------
+let FOTOS = {}; // numero -> [storage paths]
+const FORM_GRUPO = grupoParam || (crypto.randomUUID ? crypto.randomUUID() : 'g-' + Date.now());
+function renderFotos(n){
+  const box = document.getElementById('fotos-' + n);
+  if(!box) return;
+  const arr = FOTOS[n] || [];
+  box.innerHTML =
+    arr.map((p, idx) => `<span class="thumb"><img src="${Fotos.publicUrl(p)}" alt="Evidência item ${n}" loading="lazy"><button type="button" data-foto-del="${n}:${idx}" title="Remover foto">×</button></span>`).join('')
+    + (arr.length < Fotos.MAX_POR_ITEM
+      ? `<label class="foto-add">+ Foto<input type="file" accept="image/*" capture="environment" data-foto-add="${n}" hidden></label>`
+      : `<span class="badge badge-gray">${arr.length}/${Fotos.MAX_POR_ITEM}</span>`);
+  box.querySelectorAll('[data-foto-add]').forEach(inp => inp.onchange = () => addFoto(n, inp.files[0]));
+  box.querySelectorAll('[data-foto-del]').forEach(btn => btn.onclick = () => delFoto(n, +btn.dataset.fotoDel.split(':')[1]));
+}
+async function addFoto(n, file){
+  if(!file) return;
+  try{
+    const path = await Fotos.upload(FORM_GRUPO, n, file);
+    (FOTOS[n] = FOTOS[n] || []).push(path);
+    renderFotos(n);
+  }catch(e){ toast('Erro na foto: ' + e.message, 'err'); }
+}
+async function delFoto(n, idx){
+  const arr = FOTOS[n] || [];
+  const [path] = arr.splice(idx, 1);
+  renderFotos(n);
+  if(path){ try{ await Fotos.remove([path]); }catch(e){ toast('Foto removida da ficha; erro no servidor: ' + e.message, 'err'); } }
+}
+function renderTodasFotos(){ ITENS.forEach(([n]) => renderFotos(n)); }
+
+// ---------- Assinaturas digitais (identidade logada, sem caneta) ----------
+const SIG_ROLES = [['tecnico', 'Técnico de operações'], ['chefe', 'Chefe de área'], ['gerente', 'Gerente do porto']];
+let ASS = { tecnico: null, chefe: null, gerente: null };
+function renderAss(){
+  const box = document.getElementById('assinaturas');
+  if(!box) return;
+  box.innerHTML = SIG_ROLES.map(([k, label]) => {
+    const a = ASS[k];
+    return `<div class="sig-block${a ? ' signed' : ''}"><div><b>${label}</b><br>${
+      a ? `<small>Assinado digitalmente por ${esc(a.nome)} (${esc(a.email)}) em ${esc(fmtDH(a.data_hora))}</small>`
+        : '<small class="muted">Não assinado</small>'}</div>`
+      + `<div class="hist-actions no-print">${a
+        ? `<button type="button" class="btn btn-ghost" data-sig-clear="${k}">Limpar</button>`
+        : `<button type="button" class="btn btn-primary" data-sig-sign="${k}">Assinar</button>`}</div></div>`;
+  }).join('');
+  box.querySelectorAll('[data-sig-sign]').forEach(b => b.onclick = () => assinar(b.dataset.sigSign));
+  box.querySelectorAll('[data-sig-clear]').forEach(b => b.onclick = () => { ASS[b.dataset.sigClear] = null; renderAss(); });
+}
+async function assinar(k){
+  const u = await Auth.user();
+  if(!u){ toast('Sessão expirada. Entre novamente.', 'err'); return; }
+  let nome = u.email;
+  try{ const p = await Auth.profile(); if(p?.nome) nome = p.nome; }catch(_){}
+  ASS[k] = { nome, email: u.email, user_id: u.id, data_hora: new Date().toISOString() };
+  renderAss();
+  toast('Assinatura registrada.', 'ok');
+}
 
 function val(name){
   const el = form.querySelector(`[name="${name}"]`);
@@ -339,7 +396,7 @@ function inspErrs(){
   const { c, nao } = atualizarContador();
   if(c < 24) e.push(`Responda os 24 itens (faltam ${24 - c}).`);
   if(nao > 0 && !val('observacoes_acoes')) e.push('Há item NÃO — descreva observações e ações RIP/ROP.');
-  if(!val('tecnico_nome')) e.push('Informe o técnico na assinatura.');
+  if(!ASS.tecnico) e.push('Falta a assinatura digital do técnico.');
   const di = val('data_inspecao'), pi = val('periodo_inicio'), pf = val('periodo_fim');
   if(di && pi && pf && (di < pi || di > pf)) e.push('Data da inspeção fora do período da ficha.');
   return e;
@@ -446,14 +503,22 @@ async function loadGrupo(){
   }
   if(insp){
     Object.keys(insp).forEach(k => { if(!k.startsWith('item_')) fill(k, insp[k]); });
-    (insp.itens || []).forEach(it => fill('item_' + it.numero, it.resposta));
+    (insp.itens || []).forEach(it => {
+      fill('item_' + it.numero, it.resposta);
+      if(it.fotos && it.fotos.length) FOTOS[it.numero] = [...it.fotos];
+    });
+    if(insp.assinaturas) ASS = { tecnico: null, chefe: null, gerente: null, ...insp.assinaturas };
     if(!ficha) fill('data_servico', insp.data_servico);
   }
+  renderTodasFotos();
+  renderAss();
   atualizarContador();
   document.getElementById('saveStatus').innerHTML = 'Editando registro diário <b>' + grupoParam + '</b>';
 }
 loadGrupo().catch(e => toast('Erro ao carregar: ' + e.message, 'err')).finally(() => showStep(0));
 atualizarContador();
+renderTodasFotos();
+renderAss();
 showStep(0);
 // Novo registro: preenche técnico/fiel/etc. conforme a função do usuário logado
 if(!grupoParam) Auth.autofill(form).catch(() => {});
@@ -466,7 +531,7 @@ form.onsubmit = async (e) => {
     const fd = new FormData(form);
     const raw = {};
     for(const [k, v] of fd.entries()) raw[k] = (v === '' ? null : v);
-    const grupo_id = grupoParam || (crypto.randomUUID ? crypto.randomUUID() : 'g-' + Date.now());
+    const grupo_id = FORM_GRUPO;
     const data_servico = raw.data_servico;
 
     const fichaRow = {
@@ -496,11 +561,15 @@ form.onsubmit = async (e) => {
       grupo_id, data_servico,
       porto: raw.porto, data_inspecao: raw.data_inspecao, hora_operacoes: raw.hora_operacoes,
       navios_atracados: raw.navios_atracados, principais_operacoes: raw.principais_operacoes,
-      itens: ITENS.map(([n]) => ({ numero: n, resposta: raw[`item_${n}`] || null })),
+      itens: ITENS.map(([n]) => ({ numero: n, resposta: raw[`item_${n}`] || null, fotos: FOTOS[n] ? [...FOTOS[n]] : [] })),
       observacoes_acoes: raw.observacoes_acoes,
-      tecnico_nome: raw.tecnico_nome || raw.tecnico_operacoes, tecnico_data: raw.tecnico_data,
-      chefe_nome: raw.chefe_nome, chefe_data: raw.chefe_data,
-      gerente_nome: raw.gerente_nome, gerente_data: raw.gerente_data
+      assinaturas: JSON.parse(JSON.stringify(ASS)),
+      tecnico_nome: ASS.tecnico?.nome || raw.tecnico_operacoes || null,
+      tecnico_data: ASS.tecnico ? ASS.tecnico.data_hora.slice(0, 10) : null,
+      chefe_nome: ASS.chefe?.nome || null,
+      chefe_data: ASS.chefe ? ASS.chefe.data_hora.slice(0, 10) : null,
+      gerente_nome: ASS.gerente?.nome || null,
+      gerente_data: ASS.gerente ? ASS.gerente.data_hora.slice(0, 10) : null
     };
 
     let fichaSaved, inspSaved;

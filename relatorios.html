@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatórios — CODEBA Porto de Ilhéus</title>
-<link rel="stylesheet" href="css/styles.css?v=8">
+<link rel="stylesheet" href="css/styles.css?v=9">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -93,6 +93,7 @@
 <script src="js/ui.js?v=4"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/itens.js?v=4"></script>
+<script src="js/storage.js?v=5"></script>
 <script src="js/auth.js?v=4"></script>
 <script>Auth.require();</script>
 <script>
@@ -239,7 +240,7 @@ function csvCell(v){
 function exportarCsv(){
   const rows = filtrados();
   const head = ['data_servico','porto','tecnico','fiel','periodo','berco01_navio','berco02_navio',
-    'item_numero','item','norma','resposta','observacoes_acoes'];
+    'item_numero','item','norma','resposta','fotos','observacoes_acoes'];
   const lines = [head.join(';')];
   rows.forEach(g => {
     const f = g.ficha || {}, i = g.insp || {};
@@ -250,9 +251,10 @@ function exportarCsv(){
     const itens = (i.itens && i.itens.length ? i.itens : [{ numero: '', resposta: '' }]);
     itens.forEach(it => {
       const meta = window.ITENS.find(x => x[0] === it.numero) || [];
+      const fotos = (it.fotos || []).map(p => Fotos.publicUrl(p)).join(' | ');
       lines.push([...base.map(csvCell),
         csvCell(it.numero), csvCell(window.ITENS_CURTO[it.numero] || ''),
-        csvCell(meta[2] || ''), csvCell(it.resposta), csvCell(i.observacoes_acoes || '')].join(';'));
+        csvCell(meta[2] || ''), csvCell(it.resposta), csvCell(fotos), csvCell(i.observacoes_acoes || '')].join(';'));
     });
   });
   const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });

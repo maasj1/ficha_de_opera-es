@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="Sistema de registro diário de operações portuárias do Porto de Ilhéus — CODEBA.">
 <title>CODEBA · Sistema Portuário — Ilhéus</title>
-<link rel="stylesheet" href="css/styles.css?v=8">
+<link rel="stylesheet" href="css/styles.css?v=9">
 <style>body{visibility:hidden}</style>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -195,6 +195,7 @@ function render(){
     const navios = [f?.berco01_nome, f?.berco02_nome].filter(Boolean).join(' · ') || (i?.navios_atracados || '').slice(0, 60) || '—';
     const total  = (i?.itens || []).filter(x => x.resposta).length;
     const nao    = (i?.itens || []).filter(x => x.resposta === 'NAO').length;
+    const fotos  = (i?.itens || []).reduce((s, x) => s + ((x.fotos || []).length), 0);
     const dono = (f?.created_by && f.created_by === ME_ID) || (i?.created_by && i.created_by === ME_ID);
     const podeExcluir = IS_GESTOR || dono;
 
@@ -213,7 +214,7 @@ function render(){
           <span class="badge badge-gray">🚢 ${esc(navios)}</span>
           ${i ? (nao
             ? `<span class="badge badge-red">⚠ ${nao} não conf.</span>`
-            : `<span class="badge badge-green">✓ Sem NÃO</span>`) + ` <span class="badge badge-blue">${total}/24</span>` : ''}
+            : `<span class="badge badge-green">✓ Sem NÃO</span>`) + ` <span class="badge badge-blue">${total}/24</span>` + (fotos ? ` <span class="badge badge-gold">${fotos} foto${fotos > 1 ? 's' : ''}</span>` : '') : ''}
         </div>
         <div class="hist-meta">
           ${f ? '📄 Ficha ' + fmt(f.created_at) : '<em>Ficha ausente</em>'}

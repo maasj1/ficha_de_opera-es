@@ -75,6 +75,7 @@ sistema/
   js/db.js          → insert/update/list/listBy/get/remove (Supabase ou localStorage)
   js/auth.js        → sessão, guarda de rotas, usuário logado, gestor
   js/itens.js       → texto oficial dos 24 itens + rótulos curtos (fonte única)
+  js/storage.js     → fotos: compactação + upload/remoção no bucket `evidencias`
   js/theme.js       → modo claro/escuro
   js/ui.js          → toasts + skeletons
   supabase/schema.sql       → tabelas + vínculo + RLS + índices
@@ -82,6 +83,7 @@ sistema/
   supabase/migration_rls_auth.sql → perfis + created_by + RLS dono/gestor
   supabase/migration_profiles_funcao.sql → funcao/setor + gestão de perfis
   supabase/migration_profiles_hardening.sql → trava escalação a gestor + bootstrap
+  supabase/migration_evidencias_assinaturas.sql → bucket `evidencias` + coluna `assinaturas`
 ```
 
 > CSS e JS têm versão (`?v=4`): ao mudar visual ou scripts, suba o número nos `<link>`/`<script>` das páginas para furar o cache.
@@ -92,4 +94,9 @@ Em `registro.html`, **PDF 3 páginas** imprime ficha + inspeção + revisão. Em
 
 ## Relatórios gerenciais
 
-`relatorios.html` (qualquer logado): filtros por período/porto/busca, KPIs (registros, % completos, NÃO, conformidade), gráficos (NÃO por item, SIM/NÃO/N/A, NÃO por dia), ranking dos 24 itens e **exportação CSV** (separador `;`, abre direto no Excel). Gráficos via Chart.js (CDN).
+`relatorios.html` (qualquer logado): filtros por período/porto/busca, KPIs (registros, % completos, NÃO, conformidade), gráficos (NÃO por item, SIM/NÃO/N/A, NÃO por dia), ranking dos 24 itens e **exportação CSV** (separador `;`, abre direto no Excel; inclui links das fotos). Gráficos via Chart.js (CDN).
+
+## Evidências e assinaturas digitais
+
+- **Fotos por item** (etapa Inspeção, até 3 por item): câmera do celular ou upload, compactadas no envio, salvas no bucket `evidencias` (`grupo/itemN_timestamp.jpg`), referenciadas em `inspecoes.itens[].fotos`. Saem no PDF e no CSV.
+- **Assinatura digital sem caneta**: cada responsável assina com a própria conta — grava nome, email, `user_id`, data e hora em `inspecoes.assinaturas`, com compatibilidade nos campos `*_nome/*_data`. Rode `supabase/migration_evidencias_assinaturas.sql`.
