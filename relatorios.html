@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatórios — CODEBA Porto de Ilhéus</title>
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=10">
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('codeba_theme')||'light')}catch(e){}</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
@@ -49,6 +49,7 @@
     <div class="btn-row">
       <button class="btn btn-primary" id="btnFiltrar">Aplicar filtros</button>
       <button class="btn btn-ghost" id="btnLimpar">Limpar</button>
+      <label class="check-filtro no-print"><input type="checkbox" id="f_risco"> Só ocorrências</label>
     </div>
   </div>
 
@@ -85,6 +86,17 @@
     </div>
   </div>
 
+  <div class="card">
+    <div class="section-title"><span class="num">5</span> Ocorrências de risco</div>
+    <p class="subtitle">Crítico: NÃO nos itens 24, 15, 12 ou 21. Grave: NÃO em item de norma /G ou /GR.</p>
+    <div style="overflow-x:auto">
+    <table class="check">
+      <thead><tr><th style="width:110px">Data</th><th>Técnico</th><th style="width:70px">Item</th><th>Ocorrência</th><th style="width:110px">Norma</th><th style="width:130px">Nível</th></tr></thead>
+      <tbody id="ocBody"></tbody>
+    </table>
+    </div>
+  </div>
+
   <div class="footer">CODEBA · Gerência do Porto de Ilhéus — uso interno</div>
 </div>
 
@@ -93,6 +105,7 @@
 <script src="js/ui.js?v=4"></script>
 <script src="js/db.js?v=4"></script>
 <script src="js/itens.js?v=4"></script>
+<script src="js/risco.js?v=5"></script>
 <script src="js/storage.js?v=7"></script>
 <script src="js/auth.js?v=4"></script>
 <script>Auth.require();</script>
@@ -134,11 +147,13 @@ function filtrados(){
   const ate = document.getElementById('f_ate').value || '9999-99-99';
   const porto = document.getElementById('f_porto').value;
   const q = (document.getElementById('f_q').value || '').toLowerCase();
+  const soRisco = document.getElementById('f_risco')?.checked;
   return GRUPOS.filter(g => {
     const d = dataDe(g);
     if(d < de || d > ate) return false;
     if(porto && g.insp?.porto !== porto) return false;
     if(q && !JSON.stringify(g).toLowerCase().includes(q)) return false;
+    if(soRisco && !Risco.avaliarGrupo(g).nivel) return false;
     return true;
   });
 }
@@ -178,6 +193,34 @@ function desenhar(rows){
   document.getElementById('kComp').textContent = rows.length ? Math.round(comp / rows.length * 100) + '%' : '—';
   document.getElementById('kNao').textContent = nao;
   document.getElementById('kConf').textContent = resp ? Math.round(sim / resp * 100) + '%' : '—';
+
+  // Ocorrências de risco (crítico primeiro, depois por data)
+  const ocs = [];
+  rows.forEach(g => {
+    const av = Risco.avaliarGrupo(g);
+    if(!av.nivel) return;
+    const f = g.ficha || {}, i = g.insp || {};
+    av.itens.forEach(n => {
+      const meta = (window.ITENS.find(x => x[0] === n) || []);
+      ocs.push({
+        data: dataDe(g),
+        tec: f.tecnico_operacoes || i.tecnico_nome || '—',
+        n, curto: window.ITENS_CURTO[n] || '', norma: meta[2] || '',
+        nivel: Risco.nivelItem(n, 'NAO')
+      });
+    });
+  });
+  ocs.sort((a, b) => (a.nivel === b.nivel)
+    ? String(b.data).localeCompare(String(a.data))
+    : (a.nivel === 'critico' ? -1 : 1));
+  document.getElementById('ocBody').innerHTML = ocs.length ? ocs.map(o => `
+    <tr><td>${esc(o.data || '—')}</td><td>${esc(o.tec)}</td>
+      <td><span class="num-circle">${o.n}</span></td>
+      <td>${esc(o.curto)}</td>
+      <td><span class="badge badge-gray">${esc(o.norma)}</span></td>
+      <td>${o.nivel === 'critico' ? '<span class="badge badge-red">Crítico</span>' : '<span class="badge badge-orange">Grave</span>'}</td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Nenhuma ocorrência no filtro atual.</td></tr>';
 
   const nInsp = insps.length || 1;
   const rank = Object.keys(porItem)
@@ -240,10 +283,11 @@ function csvCell(v){
 function exportarCsv(){
   const rows = filtrados();
   const head = ['data_servico','porto','tecnico','fiel','periodo','berco01_navio','berco02_navio',
-    'item_numero','item','norma','resposta','fotos','observacoes_acoes'];
+    'item_numero','item','norma','resposta','nivel_risco','fotos','observacoes_acoes'];
   const lines = [head.join(';')];
   rows.forEach(g => {
     const f = g.ficha || {}, i = g.insp || {};
+    const nivel = Risco.avaliarGrupo(g).nivel || '';
     const base = [f.data_servico || i.data_servico || '', i.porto || '',
       f.tecnico_operacoes || i.tecnico_nome || '', f.fiel_armazem || '',
       (f.periodo_inicio || '') + ' a ' + (f.periodo_fim || ''),
@@ -254,7 +298,7 @@ function exportarCsv(){
       const fotos = (it.fotos || []).map(p => Fotos.publicUrl(p)).join(' | ');
       lines.push([...base.map(csvCell),
         csvCell(it.numero), csvCell(window.ITENS_CURTO[it.numero] || ''),
-        csvCell(meta[2] || ''), csvCell(it.resposta), csvCell(fotos), csvCell(i.observacoes_acoes || '')].join(';'));
+        csvCell(meta[2] || ''), csvCell(it.resposta), csvCell(nivel), csvCell(fotos), csvCell(i.observacoes_acoes || '')].join(';'));
     });
   });
   const blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
@@ -268,11 +312,13 @@ function exportarCsv(){
 
 document.getElementById('btnFiltrar').onclick = aplicar;
 document.getElementById('f_q').oninput = aplicar;
+document.getElementById('f_risco').onchange = aplicar;
 document.getElementById('btnLimpar').onclick = () => {
   document.getElementById('f_de').value = '';
   document.getElementById('f_ate').value = '';
   document.getElementById('f_porto').value = '';
   document.getElementById('f_q').value = '';
+  document.getElementById('f_risco').checked = false;
   aplicar();
 };
 document.getElementById('btnCsv').onclick = exportarCsv;

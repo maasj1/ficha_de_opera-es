@@ -75,6 +75,7 @@ sistema/
   js/db.js          → insert/update/list/listBy/get/remove (Supabase ou localStorage)
   js/auth.js        → sessão, guarda de rotas, usuário logado, gestor
   js/itens.js       → texto oficial dos 24 itens + rótulos curtos (fonte única)
+  js/risco.js       → regras de alerta crítico/grave por item
   js/storage.js     → fotos: compactação + upload/remoção no bucket `evidencias`
   js/theme.js       → modo claro/escuro
   js/ui.js          → toasts + skeletons
@@ -95,6 +96,11 @@ Em `registro.html`, **PDF 3 páginas** imprime ficha + inspeção + revisão. Em
 ## Relatórios gerenciais
 
 `relatorios.html` (qualquer logado): filtros por período/porto/busca, KPIs (registros, % completos, NÃO, conformidade), gráficos (NÃO por item, SIM/NÃO/N/A, NÃO por dia), ranking dos 24 itens e **exportação CSV** (separador `;`, abre direto no Excel; inclui links das fotos). Gráficos via Chart.js (CDN).
+
+## Alertas de risco (Fase A — no app)
+
+- Regras em `js/risco.js`: **crítico** = NÃO nos itens 24, 15, 12 ou 21; **grave** = NÃO em item de norma `/G` ou `/GR`. Sem mudança no banco.
+- Selo na lista + filtro "Só ocorrências" no dashboard; seção de ocorrências e coluna `nivel_risco` no relatório/CSV.
 
 ## Evidências e assinaturas digitais
 

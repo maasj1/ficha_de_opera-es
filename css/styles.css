@@ -132,6 +132,7 @@
 [data-theme="dark"] .badge-red    { background: rgba(239,68,68,.14);  color: #f87171; border-color: rgba(239,68,68,.4); }
 [data-theme="dark"] .badge-gray   { background: rgba(148,163,184,.12); color: #94a3b8; border-color: var(--border); }
 [data-theme="dark"] .badge-gold   { background: rgba(224,168,32,.15); color: #fbbf24; border-color: rgba(224,168,32,.4); }
+[data-theme="dark"] .badge-orange { background: rgba(249,115,22,.15); color: #fdba74; border-color: rgba(249,115,22,.4); }
 [data-theme="dark"] .local-block  { background: #0a1829; border-color: var(--border); }
 [data-theme="dark"] .local-block h4 { color: #c8daf0; }
 [data-theme="dark"] .config-grid  { background: #0a1829; border-color: var(--border); }
@@ -701,6 +702,14 @@ input:focus, select:focus, textarea:focus {
 .badge-red   { background: var(--bad-bg); color: var(--bad); border-color: var(--bad-border); }
 .badge-gray  { background: #f1f5f9; color: #475569;  border-color: var(--border); }
 .badge-gold  { background: var(--gold-100); color: #8a5a12; border-color: #f0bf3a; }
+.badge-orange { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+.check-filtro {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 600; color: var(--ink);
+  border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px;
+  cursor: pointer; background: var(--card); white-space: nowrap;
+}
+.check-filtro input { width: auto; accent-color: var(--bad); margin: 0; }
 
 .alert {
   background: #fffbeb;
