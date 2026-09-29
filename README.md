@@ -98,5 +98,5 @@ Em `registro.html`, **PDF 3 páginas** imprime ficha + inspeção + revisão. Em
 
 ## Evidências e assinaturas digitais
 
-- **Fotos por item** (etapa Inspeção, até 3 por item): câmera do celular ou upload, compactadas no envio, salvas no bucket `evidencias` (`grupo/itemN_timestamp.jpg`), referenciadas em `inspecoes.itens[].fotos`. Saem no PDF e no CSV.
+- **Fotos por item** (etapa Inspeção, até 3 por item): câmera do celular ou upload (JPG, PNG, WEBP e HEIC de iPhone — tudo vira JPEG), compactadas no envio, salvas no bucket `evidencias` (`grupo/itemN_timestamp.jpg`), referenciadas em `inspecoes.itens[].fotos`. Saem no PDF e no CSV.
 - **Assinatura digital sem caneta**: cada responsável assina com a própria conta — grava nome, email, `user_id`, data e hora em `inspecoes.assinaturas`, com compatibilidade nos campos `*_nome/*_data`. Rode `supabase/migration_evidencias_assinaturas.sql`.

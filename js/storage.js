@@ -17,8 +17,32 @@
     return baseUrl() + String(path).split('/').map(encodeURIComponent).join('/');
   }
 
+  // Garante arquivo decodificável: converte HEIC/HEIF (foto de iPhone) para JPEG.
+  // Suporta JPG, PNG, WEBP, GIF e HEIC/HEIF.
+  async function toDecodable(file) {
+    if (!file) throw new Error('Nenhum arquivo selecionado.');
+    const name = file.name || 'foto';
+    const isHeic = /heic|heif/i.test(file.type || '') || /\.hei[cf]$/i.test(name);
+    if (isHeic) {
+      if (typeof heic2any !== 'function')
+        throw new Error('Foto HEIC não suportada aqui. Converta para JPG e tente de novo.');
+      const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+      const blob = Array.isArray(out) ? out[0] : out;
+      return new File([blob], name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+    }
+    if (file.type && !file.type.startsWith('image/'))
+      throw new Error('Selecione uma imagem (JPG, PNG, WEBP ou HEIC).');
+    return file;
+  }
+
   async function compress(file) {
-    const bmp = await createImageBitmap(file);
+    file = await toDecodable(file);
+    let bmp;
+    try {
+      bmp = await createImageBitmap(file);
+    } catch (_) {
+      throw new Error('Não consegui ler esta imagem. Tente JPG ou PNG.');
+    }
     const scale = Math.min(1, MAX_DIM / Math.max(bmp.width, bmp.height));
     const w = Math.max(1, Math.round(bmp.width * scale));
     const h = Math.max(1, Math.round(bmp.height * scale));
