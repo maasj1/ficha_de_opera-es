@@ -241,7 +241,7 @@
 <script src="js/config.js?v=4"></script>
 <script src="js/theme.js?v=4"></script>
 <script src="js/ui.js?v=4"></script>
-<script src="js/db.js?v=4"></script>
+<script src="js/db.js?v=5"></script>
 <script src="js/itens.js?v=4"></script>
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 <script src="js/storage.js?v=7"></script>
@@ -477,6 +477,16 @@ function revisar(){
     { t: !f.length ? 'Ficha pronta para salvar' : `Ficha — ${f.length} pendência(s)`, ok: !f.length },
     { t: !i.length ? `Inspeção pronta — ${answered}/24 itens` : `Inspeção — ${i.length} pendência(s)`, ok: !i.length },
   ];
+  let auditHtml = '';
+  if (grupoParam && (AUDIT.ficha || AUDIT.insp)) {
+    const linha = (r, rot) => {
+      if (!r) return `<em>${rot} ausente</em>`;
+      const cri = r.created_by ? ` por ${esc(AUDIT.nomes[r.created_by] || '—')}` : '';
+      const edi = r.updated_at ? ` · editado por ${esc(AUDIT.nomes[r.updated_by] || '—')} em ${esc(fmtAudit(r.updated_at))}` : '';
+      return `${rot} ${esc(fmtAudit(r.created_at))}${cri}${edi}`;
+    };
+    auditHtml = `<li class="review-item"><span class="review-icon">🕘</span><span class="review-text">${linha(AUDIT.ficha, 'Ficha')}<br>${linha(AUDIT.insp, 'Inspeção')}</span></li>`;
+  }
   boxEl.innerHTML = items.map(x => `
     <li class="review-item ${x.ok ? 'ok' : 'bad'}">
       <span class="review-icon">${x.ok ? '✅' : '⚠️'}</span>
@@ -484,9 +494,17 @@ function revisar(){
     </li>`).join('')
     + (errs.length
       ? `<li class="review-item bad"><span class="review-icon">📋</span><span class="review-text"><b>Pendências (${errs.length}):</b><br>• ${errs.join('<br>• ')}</span></li>`
-      : `<li class="review-item ok"><span class="review-icon">🎉</span><span class="review-text"><b>Tudo certo — pode salvar.</b></span></li>`);
+      : `<li class="review-item ok"><span class="review-icon">🎉</span><span class="review-text"><b>Tudo certo — pode salvar.</b></span></li>`)
+    + auditHtml;
   return errs;
 }
+
+function fmtAudit(iso){
+  if(!iso) return '—';
+  try{ return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+  catch{ return iso; }
+}
+let AUDIT = { ficha: null, insp: null, nomes: {} };
 
 async function loadGrupo(){
   if(!grupoParam) return;
@@ -518,6 +536,16 @@ async function loadGrupo(){
   renderTodasFotos();
   renderAss();
   atualizarContador();
+  AUDIT.ficha = ficha || null; AUDIT.insp = insp || null;
+  try {
+    const ids = [...new Set([ficha?.created_by, ficha?.updated_by, insp?.created_by, insp?.updated_by].filter(Boolean))];
+    if (ids.length) {
+      const sb = DB.getClient();
+      const { data } = await sb.from('profiles').select('id, nome');
+      (data || []).forEach(p => { if (p.nome && ids.includes(p.id)) AUDIT.nomes[p.id] = p.nome; });
+    }
+  } catch (_) {}
+  if (step === 3) revisar();
   document.getElementById('saveStatus').innerHTML = 'Editando registro diário <b>' + grupoParam + '</b>';
 }
 loadGrupo().catch(e => toast('Erro ao carregar: ' + e.message, 'err')).finally(() => showStep(0));

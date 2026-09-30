@@ -19,7 +19,7 @@
   function writeLocal(key, arr) { localStorage.setItem(key, JSON.stringify(arr)); }
 
   async function insert(table, row) {
-    row = { ...row, created_at: new Date().toISOString() };
+    row = stripAudit({ ...row, created_at: new Date().toISOString() });
     if (!sb) {
       row.id = 'local-' + Date.now();
       const arr = readLocal(table);
@@ -32,8 +32,19 @@
     return data;
   }
 
+  // Campos de auditoria são carimbados por trigger no servidor:
+  // nunca saem do cliente (anti-fraude).
+  function stripAudit(row) {
+    const r = { ...row };
+    delete r.updated_at;
+    delete r.updated_by;
+    return r;
+  }
+
   async function update(table, id, row) {
+    row = stripAudit(row);
     if (!sb || String(id).startsWith('local-')) {
+      row.updated_at = new Date().toISOString(); // modo local: carimbo simples
       const arr = readLocal(table).map(r => String(r.id) === String(id) ? { ...r, ...row } : r);
       writeLocal(table, arr);
       return arr.find(r => String(r.id) === String(id));

@@ -89,6 +89,7 @@ sistema/
   supabase/migration_profiles_hardening.sql → trava escalação a gestor + bootstrap
   supabase/migration_evidencias_assinaturas.sql → bucket `evidencias` + coluna `assinaturas`
   supabase/migration_gestao_acessos.sql → coluna `ativo` + `is_ativo()` nas policies + trava
+  supabase/migration_auditoria.sql → `updated_at/by` + trigger `touch_audit`
 ```
 
 > CSS e JS têm versão (`?v=4`): ao mudar visual ou scripts, suba o número nos `<link>`/`<script>` das páginas para furar o cache.
@@ -100,6 +101,12 @@ Em `registro.html`, **PDF 3 páginas** imprime ficha + inspeção + revisão. Em
 ## Relatórios gerenciais
 
 `relatorios.html` (qualquer logado): filtros por período/porto/busca, KPIs (registros, % completos, NÃO, conformidade), gráficos (NÃO por item, SIM/NÃO/N/A, NÃO por dia), ranking dos 24 itens e **exportação CSV** (separador `;`, abre direto no Excel; inclui links das fotos). Gráficos via Chart.js (CDN).
+
+## Auditoria de alterações
+
+- `updated_at`/`updated_by` em ficha e inspeção, carimbados por trigger (`touch_audit`) a cada update — rode `supabase/migration_auditoria.sql`.
+- O app nunca envia esses campos (`db.js` remove do payload: anti-fraude).
+- Dashboard mostra "editado por Nome em dd/mm hh:mm" por linha; a Revisão mostra criado/alterado por quem e quando. Nomes resolvidos via `profiles`; vazio = "—".
 
 ## Alertas de risco (Fase A — no app)
 

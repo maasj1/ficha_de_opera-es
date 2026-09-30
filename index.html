@@ -103,7 +103,7 @@
 <script src="js/config.js?v=4"></script>
 <script src="js/theme.js?v=4"></script>
 <script src="js/ui.js?v=4"></script>
-<script src="js/db.js?v=4"></script>
+<script src="js/db.js?v=5"></script>
 <script src="js/itens.js?v=4"></script>
 <script src="js/risco.js?v=5"></script>
 <script src="js/auth.js?v=4"></script>
@@ -119,6 +119,7 @@
 
 let grupos = [];
 let ME_ID = null, IS_GESTOR = false;
+let NOMES = {}; // user_id -> nome (auditoria)
 
 function fmt(d){
   if(!d) return '—';
@@ -133,6 +134,18 @@ function fmtData(d){
   }catch{ return { day: d.slice(8,10)||'—', mon:'' }; }
 }
 function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function nomeDe(id){ return (id && NOMES[id]) || '—'; }
+function fmtAudit(iso){
+  if(!iso) return '—';
+  try{ return new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+  catch{ return iso; }
+}
+function linhaAudit(r, rotulo){
+  if(!r) return `<em>${rotulo} ausente</em>`;
+  const criador = r.created_by ? ` por ${esc(nomeDe(r.created_by))}` : '';
+  const edicao = r.updated_at ? ` · editado por ${esc(nomeDe(r.updated_by))} em ${esc(fmtAudit(r.updated_at))}` : '';
+  return `${rotulo} ${fmt(r.created_at)}${criador}${edicao}`;
+}
 
 async function carregar(){
   skeleton(document.getElementById('lista'), 4);
@@ -155,6 +168,11 @@ async function carregar(){
     const me = await Auth.user();
     ME_ID = me?.id || null;
     IS_GESTOR = await Auth.isGestor();
+    try {
+      const sb = DB.getClient();
+      const { data } = await sb.from('profiles').select('id, nome');
+      (data || []).forEach(p => { if (p.nome) NOMES[p.id] = p.nome; });
+    } catch (_) {}
     render(); renderStats();
   }catch(e){
     document.getElementById('lista').innerHTML = '<div class="alert">⚠ Erro ao carregar: ' + esc(e.message) + '</div>';
@@ -227,9 +245,9 @@ function render(){
             : `<span class="badge badge-green">✓ Sem NÃO</span>`) + ` <span class="badge badge-blue">${total}/24</span>` + (fotos ? ` <span class="badge badge-gold">${fotos} foto${fotos > 1 ? 's' : ''}</span>` : '') : ''}
         </div>
         <div class="hist-meta">
-          ${f ? '📄 Ficha ' + fmt(f.created_at) : '<em>Ficha ausente</em>'}
+          ${linhaAudit(f, '📄 Ficha')}
           &nbsp;·&nbsp;
-          ${i ? '🔍 Inspeção ' + fmt(i.created_at) : '<em>Inspeção ausente</em>'}
+          ${linhaAudit(i, '🔍 Inspeção')}
         </div>
       </div>
       <div class="hist-actions">
